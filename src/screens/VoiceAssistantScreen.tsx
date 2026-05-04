@@ -1,31 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  FlatList, 
+  StyleSheet, 
+  ActivityIndicator,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { GeminiService } from '../services/geminiService';
 import { speechService } from '../services/speechService';
 import { buildSystemInstruction } from '../utils/promptBuilder';
-import { Mic, MicOff, Settings2, Trash2, ArrowLeft, Volume2, Loader2, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Mic, 
+  MicOff, 
+  Settings2, 
+  Trash2, 
+  ArrowLeft, 
+  Volume2, 
+  Sparkles,
+  Send
+} from 'lucide-react-native';
 
 export const VoiceAssistantScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { apiKey, mode, tone, language, history, addMessage, clearHistory } = useAppContext();
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [status, setStatus] = useState<string>('System Ready');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<string>('SYSTEM READY');
+  const [textInput, setTextInput] = useState('');
+  const flatListRef = useRef<FlatList>(null);
   
   const gemini = useRef(new GeminiService(apiKey));
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [history, isThinking]);
-
-  // ... (rest of logic remains same, just updating UI)
 
   const handleStartListening = () => {
     speechService.stopSpeaking();
@@ -41,7 +51,7 @@ export const VoiceAssistantScreen: React.FC<{ onBack: () => void }> = ({ onBack 
       },
       (err) => {
         setIsListening(false);
-        setStatus('INTERRUPTED');
+        setStatus('VOICE UNAVAILABLE');
         setTimeout(() => setStatus('SYSTEM READY'), 2000);
       }
     );
@@ -59,6 +69,7 @@ export const VoiceAssistantScreen: React.FC<{ onBack: () => void }> = ({ onBack 
     addMessage({ role: 'user', text });
     setIsThinking(true);
     setStatus('THINKING');
+    setTextInput('');
 
     try {
       const systemInstruction = buildSystemInstruction(mode, tone, language);
@@ -88,175 +99,300 @@ export const VoiceAssistantScreen: React.FC<{ onBack: () => void }> = ({ onBack 
   };
 
   return (
-    <div className="flex flex-col h-screen text-white overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 py-8 glass-dark z-20">
-        <motion.button 
-          whileTap={{ scale: 0.9 }}
-          onClick={onBack} 
-          className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/60" />
-        </motion.button>
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-bold tracking-tight text-glow">{mode}</h2>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">{tone} • {language === 'hi-IN' ? 'Hindi' : 'English'}</span>
-          </div>
-        </div>
-        <motion.button 
-          whileTap={{ scale: 0.9 }}
-          onClick={clearHistory} 
-          className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5"
-        >
-          <Trash2 className="w-5 h-5 text-white/60" />
-        </motion.button>
-      </header>
-
-      {/* Chat Area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-8 py-8 space-y-8 scrollbar-hide mask-gradient"
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <AnimatePresence initial={false}>
-          {history.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"
-            >
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="p-8 rounded-[40px] bg-white/5 border border-white/10"
-              >
-                <Sparkles className="w-12 h-12 text-white/30" />
-              </motion.div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold">Initiated</h3>
-                <p className="text-white/30 text-sm max-w-[240px] mx-auto leading-relaxed">
-                  Start your conversation by tapping the sphere below.
-                </p>
-              </div>
-            </motion.div>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onBack} style={styles.headerButton}>
+            <ArrowLeft size={20} color="rgba(255,255,255,0.6)" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>{mode}</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusSubtext}>{tone} • {language === 'hi-IN' ? 'Hindi' : 'English'}</Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={clearHistory} style={styles.headerButton}>
+            <Trash2 size={20} color="rgba(255,255,255,0.6)" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Chat Area */}
+        <FlatList
+          ref={flatListRef}
+          data={history}
+          keyExtractor={(_, index) => index.toString()}
+          contentContainerStyle={styles.chatList}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Sparkles size={48} color="rgba(255,255,255,0.2)" />
+              </View>
+              <Text style={styles.emptyTitle}>Initiated</Text>
+              <Text style={styles.emptySubtitle}>Start your conversation by typing below or tapping the mic.</Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View style={[
+              styles.messageWrapper,
+              item.role === 'user' ? styles.userWrapper : styles.modelWrapper
+            ]}>
+              <View style={[
+                styles.messageBubble,
+                item.role === 'user' ? styles.userBubble : styles.modelBubble
+              ]}>
+                <Text style={[
+                  styles.messageText,
+                  item.role === 'user' ? styles.userText : styles.modelText
+                ]}>
+                  {item.text}
+                </Text>
+              </View>
+            </View>
           )}
+          ListFooterComponent={isThinking ? (
+            <View style={styles.thinkingBubble}>
+              <ActivityIndicator size="small" color="white" />
+            </View>
+          ) : null}
+        />
 
-          {history.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[85%] px-6 py-5 rounded-[32px] ${
-                msg.role === 'user' 
-                  ? 'bg-white text-black font-medium rounded-br-none shadow-2xl' 
-                  : 'glass-dark border border-white/10 rounded-bl-none text-white/90'
-              }`}>
-                <p className="text-sm leading-relaxed tracking-wide">{msg.text}</p>
-              </div>
-            </motion.div>
-          ))}
-
-          {isThinking && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex justify-start"
-            >
-              <div className="glass-dark border border-white/5 px-6 py-5 rounded-[32px] rounded-bl-none">
-                <div className="flex gap-2">
-                  <motion.span 
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }} 
-                    transition={{ repeat: Infinity, duration: 1 }}
-                    className="w-1.5 h-1.5 bg-white rounded-full" 
-                  />
-                  <motion.span 
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }} 
-                    transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                    className="w-1.5 h-1.5 bg-white rounded-full" 
-                  />
-                  <motion.span 
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }} 
-                    transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                    className="w-1.5 h-1.5 bg-white rounded-full" 
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Control Bar */}
-      <footer className="px-8 pb-14 pt-8 glass-dark relative z-20">
-        <div className="flex flex-col items-center gap-10">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-black h-4 transition-all duration-300">
-            {status}
-          </div>
-
-          <div className="relative group">
-            {/* Ambient Pulse */}
-            <AnimatePresence>
-              {(isListening || isThinking || isSpeaking) && (
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: [1, 2, 1], opacity: [0, 0.2, 0] }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="absolute inset-0 bg-white rounded-full blur-3xl"
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                />
-              )}
-            </AnimatePresence>
-
-            {/* Main Interactive Sphere */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={isListening ? handleStopListening : handleStartListening}
-              className={`relative z-10 w-28 h-28 rounded-full flex items-center justify-center transition-all duration-700 shadow-2xl overflow-hidden ${
-                isListening 
-                  ? 'bg-red-500 shadow-red-500/40 ring-4 ring-red-500/20' 
-                  : (isThinking || isSpeaking)
-                    ? 'bg-white shadow-white/40 ring-4 ring-white/20'
-                    : 'bg-white/10 border border-white/20 hover:bg-white/20 shadow-white/5'
-              }`}
-            >
-              {isListening ? (
-                <MicOff className="w-10 h-10 text-white" />
-              ) : (isThinking || isSpeaking) ? (
-                <Loader2 className="w-10 h-10 text-black animate-spin" />
-              ) : (
-                <Mic className="w-10 h-10 text-white" />
-              )}
-              
-              {/* Inner Glow Effect */}
-              {isListening && (
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"
-                />
-              )}
-            </motion.button>
-          </div>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.statusLabel}>{status}</Text>
           
-          <div className="flex items-center gap-12">
-             <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 hover:text-white transition-all group">
-                <Volume2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span>Audio</span>
-             </button>
-             <button onClick={onBack} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 hover:text-white transition-all group">
-                <Settings2 className="w-4 h-4 group-hover:rotate-45 transition-transform" />
-                <span>Config</span>
-             </button>
-          </div>
-        </div>
-      </footer>
-    </div>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.textInput}
+              value={textInput}
+              onChangeText={setTextInput}
+              placeholder="Message Gemini..."
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              onSubmitEditing={() => handleUserMessage(textInput)}
+            />
+            {textInput.trim() ? (
+              <TouchableOpacity 
+                onPress={() => handleUserMessage(textInput)}
+                style={styles.sendButton}
+              >
+                <Send size={20} color="black" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                onPress={isListening ? handleStopListening : handleStartListening}
+                style={[styles.micButton, isListening && styles.micButtonActive]}
+              >
+                {isListening ? <MicOff size={24} color="white" /> : <Mic size={24} color="white" />}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.configRow}>
+             <TouchableOpacity style={styles.configButton}>
+                <Volume2 size={16} color="rgba(255,255,255,0.2)" />
+                <Text style={styles.configButtonText}>AUDIO</Text>
+             </TouchableOpacity>
+             <TouchableOpacity onPress={onBack} style={styles.configButton}>
+                <Settings2 size={16} color="rgba(255,255,255,0.2)" />
+                <Text style={styles.configButtonText}>CONFIG</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  headerButton: {
+    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+  },
+  headerTitleContainer: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: 'white',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  statusSubtext: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 1,
+  },
+  chatList: {
+    padding: 20,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  messageWrapper: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  userWrapper: {
+    justifyContent: 'flex-end',
+  },
+  modelWrapper: {
+    justifyContent: 'flex-start',
+  },
+  messageBubble: {
+    maxWidth: '85%',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 24,
+  },
+  userBubble: {
+    backgroundColor: 'white',
+    borderBottomRightRadius: 4,
+  },
+  modelBubble: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  userText: {
+    color: 'black',
+    fontWeight: '500',
+  },
+  modelText: {
+    color: 'rgba(255,255,255,0.9)',
+  },
+  thinkingBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 24,
+    borderBottomLeftRadius: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 100,
+    gap: 12,
+  },
+  emptyIconContainer: {
+    padding: 24,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.3)',
+    textAlign: 'center',
+    maxWidth: 240,
+  },
+  footer: {
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 20,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+    gap: 20,
+  },
+  statusLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
+    textAlign: 'center',
+    letterSpacing: 4,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 32,
+    padding: 6,
+    paddingLeft: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  textInput: {
+    flex: 1,
+    color: 'white',
+    fontSize: 15,
+    height: 48,
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: 'white',
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micButtonActive: {
+    backgroundColor: '#ef4444',
+  },
+  configRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 40,
+    marginBottom: 10,
+  },
+  configButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  configButtonText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.2)',
+    letterSpacing: 2,
+  }
+});
+;

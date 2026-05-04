@@ -1,14 +1,33 @@
 import React from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  StyleSheet
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext, Mode, Tone, Language } from '../context/AppContext';
-import { User, GraduationCap, Dumbbell, Heart, Coffee, ShieldCheck, Smile, Flame, Target, Languages, Sparkles, Zap } from 'lucide-react';
-import { motion } from 'motion/react';
+import { 
+  User, 
+  GraduationCap, 
+  Dumbbell, 
+  Heart, 
+  Coffee, 
+  ShieldCheck, 
+  Smile, 
+  Flame, 
+  Target, 
+  Sparkles,
+  Zap
+} from 'lucide-react-native';
 
 const modes: { id: Mode; icon: any; color: string; desc: string }[] = [
-  { id: 'Doctor', icon: ShieldCheck, color: 'text-blue-400', desc: 'Secure medical advice' },
-  { id: 'Teacher', icon: GraduationCap, color: 'text-yellow-400', desc: 'Patient learning assistant' },
-  { id: 'Fitness Trainer', icon: Dumbbell, color: 'text-green-400', desc: 'Actionable workout steps' },
-  { id: 'Therapist', icon: Heart, color: 'text-pink-400', desc: 'Empathetic listener' },
-  { id: 'Friend', icon: Coffee, color: 'text-orange-400', desc: 'Casual relatable chat' },
+  { id: 'Doctor', icon: ShieldCheck, color: '#60a5fa', desc: 'Secure medical advice' },
+  { id: 'Teacher', icon: GraduationCap, color: '#facc15', desc: 'Patient learning assistant' },
+  { id: 'Fitness Trainer', icon: Dumbbell, color: '#4ade80', desc: 'Actionable workout steps' },
+  { id: 'Therapist', icon: Heart, color: '#f472b6', desc: 'Empathetic listener' },
+  { id: 'Friend', icon: Coffee, color: '#fb923c', desc: 'Casual relatable chat' },
 ];
 
 const tones: { id: Tone; icon: any }[] = [
@@ -29,106 +48,235 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
   const { mode, setMode, tone, setTone, language, setLanguage } = useAppContext();
 
   return (
-    <div className="flex flex-col min-h-screen p-6 text-white justify-center">
-      <div className="max-w-md mx-auto w-full space-y-12">
-        {/* Header */}
-        <header className="text-center space-y-3">
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold tracking-tight text-glow"
-          >
-            Persona
-          </motion.h1>
-          <p className="text-white/40 text-sm font-medium tracking-widest uppercase">Select your companion</p>
-        </header>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Persona</Text>
+          <Text style={styles.subtitle}>SELECT YOUR COMPANION</Text>
+        </View>
 
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Mode</h2>
-              <div className="flex glass p-1 rounded-full border-white/5">
-                {languages.map((l) => (
-                  <button
-                    key={l.id}
-                    onClick={() => setLanguage(l.id)}
-                    className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-full transition-all ${
-                      language === l.id ? 'bg-white text-black shadow-xl' : 'text-white/40 hover:text-white/60'
-                    }`}
-                  >
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>MODE</Text>
+            <View style={styles.languageToggle}>
+              {languages.map((l) => (
+                <TouchableOpacity
+                  key={l.id}
+                  onPress={() => setLanguage(l.id)}
+                  style={[
+                    styles.langButton,
+                    language === l.id && styles.langButtonActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.langText,
+                    language === l.id && styles.langTextActive
+                  ]}>
                     {l.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              {modes.map((m, i) => (
-                <motion.button
-                  key={m.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setMode(m.id)}
-                  className={`group flex items-center gap-4 p-5 rounded-3xl border transition-all duration-500 overflow-hidden relative ${
-                    mode === m.id 
-                      ? 'bg-white/10 border-white/20 shadow-2xl shadow-white/5 ring-1 ring-white/10' 
-                      : 'bg-white/[0.02] border-white/5 hover:border-white/10'
-                  }`}
-                >
-                  {mode === m.id && (
-                    <motion.div 
-                      layoutId="active-bg"
-                      className="absolute inset-0 bg-gradient-to-r from-white/[0.05] to-transparent"
-                    />
-                  )}
-                  <div className={`p-3.5 rounded-2xl bg-black/50 border border-white/5 transition-transform group-hover:scale-110 ${m.color}`}>
-                    <m.icon className="w-5 h-5" />
-                  </div>
-                  <div className="text-left relative z-10">
-                    <div className="font-bold text-lg tracking-tight">{m.id}</div>
-                    <div className="text-xs text-white/40 font-medium">{m.desc}</div>
-                  </div>
-                </motion.button>
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </div>
-          </div>
+            </View>
+          </View>
 
-          <div className="space-y-4">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 px-2">Tone</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {tones.map((t) => (
-                <motion.button
-                  key={t.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setTone(t.id)}
-                  className={`flex flex-col items-center justify-center gap-3 p-4 rounded-3xl border transition-all ${
-                    tone === t.id 
-                      ? 'bg-white/10 border-white/20' 
-                      : 'bg-white/[0.02] border-white/5'
-                  }`}
-                >
-                  <t.icon className={`w-5 h-5 ${tone === t.id ? 'text-white' : 'text-white/20'}`} />
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${tone === t.id ? 'text-white' : 'text-white/30'}`}>{t.id}</span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        </div>
+          <View style={styles.modesGrid}>
+            {modes.map((m) => (
+              <TouchableOpacity
+                key={m.id}
+                onPress={() => setMode(m.id)}
+                style={[
+                  styles.modeCard,
+                  mode === m.id && styles.modeCardActive
+                ]}
+              >
+                <View style={styles.modeIconContainer}>
+                  <m.icon size={20} color={m.color} />
+                </View>
+                <View style={styles.modeTextContainer}>
+                  <Text style={styles.modeName}>{m.id}</Text>
+                  <Text style={styles.modeDesc}>{m.desc}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-        <div className="pt-6">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onNext}
-            className="w-full py-5 bg-white text-black font-bold rounded-full hover:bg-white/90 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] flex items-center justify-center gap-3"
-          >
-            <span>Initialize Session</span>
-            <Sparkles className="w-5 h-5" />
-          </motion.button>
-        </div>
-      </div>
-    </div>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>TONE</Text>
+          <View style={styles.tonesGrid}>
+            {tones.map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                onPress={() => setTone(t.id)}
+                style={[
+                  styles.toneCard,
+                  tone === t.id && styles.toneCardActive
+                ]}
+              >
+                <t.icon size={20} color={tone === t.id ? 'white' : 'rgba(255,255,255,0.2)'} />
+                <Text style={[
+                  styles.toneText,
+                  tone === t.id && styles.toneTextActive
+                ]}>
+                  {t.id}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity onPress={onNext} style={styles.nextButton}>
+          <Text style={styles.nextButtonText}>Initialize Session</Text>
+          <Sparkles size={20} color="black" />
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  scrollContent: {
+    padding: 24,
+    gap: 32,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: 20,
+    gap: 8,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: 'white',
+  },
+  subtitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 2,
+  },
+  section: {
+    gap: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'between',
+    alignItems: 'center',
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 2,
+    flex: 1,
+  },
+  languageToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  langButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  langButtonActive: {
+    backgroundColor: 'white',
+  },
+  langText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  langTextActive: {
+    color: 'black',
+  },
+  modesGrid: {
+    gap: 12,
+  },
+  modeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    gap: 16,
+  },
+  modeCardActive: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  modeIconContainer: {
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  modeTextContainer: {
+    flex: 1,
+  },
+  modeName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: 'white',
+  },
+  modeDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  tonesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  toneCard: {
+    width: '31%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    gap: 8,
+  },
+  toneCardActive: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  toneText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 1,
+  },
+  toneTextActive: {
+    color: 'white',
+  },
+  nextButton: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 10,
+    marginBottom: 40,
+  },
+  nextButtonText: {
+    color: 'black',
+    fontSize: 18,
+    fontWeight: '700',
+  }
+});

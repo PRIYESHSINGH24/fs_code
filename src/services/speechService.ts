@@ -1,5 +1,12 @@
 import * as Speech from 'expo-speech';
-import { ExpoSpeechRecognition } from 'expo-speech-recognition';
+
+// Dynamic import or safety check for native module
+let ExpoSpeechRecognition: any = null;
+try {
+  ExpoSpeechRecognition = require('expo-speech-recognition').ExpoSpeechRecognition;
+} catch (e) {
+  console.warn('Speech Recognition native module not found. Voice input will be disabled.');
+}
 
 export class SpeechService {
   private isSpeaking: boolean = false;
@@ -8,31 +15,41 @@ export class SpeechService {
   constructor() {}
 
   speak(text: string, lang: string = 'en-US', onEnd?: () => void) {
-    this.stopSpeaking();
-    
-    Speech.speak(text, {
-      language: lang,
-      onDone: () => {
-        this.isSpeaking = false;
-        if (onEnd) onEnd();
-      },
-      onStopped: () => {
-        this.isSpeaking = false;
-      },
-      onError: (error) => {
-        console.error('Speech error:', error);
-        this.isSpeaking = false;
-      }
-    });
-    this.isSpeaking = true;
+    try {
+      this.stopSpeaking();
+      Speech.speak(text, {
+        language: lang,
+        onDone: () => {
+          this.isSpeaking = false;
+          if (onEnd) onEnd();
+        },
+        onStopped: () => {
+          this.isSpeaking = false;
+        },
+        onError: (error) => {
+          console.error('Speech error:', error);
+          this.isSpeaking = false;
+        }
+      });
+      this.isSpeaking = true;
+    } catch (e) {
+      console.error('TTS Speak Error:', e);
+    }
   }
 
   stopSpeaking() {
-    Speech.stop();
-    this.isSpeaking = false;
+    try {
+      Speech.stop();
+      this.isSpeaking = false;
+    } catch (e) {}
   }
 
   async startListening(lang: string = 'en-US', onResult: (text: string) => void, onError: (err: any) => void) {
+    if (!ExpoSpeechRecognition) {
+      onError('NATIVE_MODULE_MISSING');
+      return;
+    }
+
     if (this.isListening) return;
 
     try {
@@ -51,14 +68,14 @@ export class SpeechService {
         continuous: false,
       });
 
-      const resultListener = ExpoSpeechRecognition.addListener("result", (event) => {
+      const resultListener = ExpoSpeechRecognition.addListener("result", (event: any) => {
         const transcript = event.results[0]?.transcript;
         if (transcript) {
           onResult(transcript);
         }
       });
 
-      const errorListener = ExpoSpeechRecognition.addListener("error", (event) => {
+      const errorListener = ExpoSpeechRecognition.addListener("error", (event: any) => {
         console.error("Speech Recognition Error:", event.error);
         onError(event.error);
       });
@@ -78,7 +95,9 @@ export class SpeechService {
   }
 
   stopListening() {
-    ExpoSpeechRecognition.stop();
+    if (ExpoSpeechRecognition) {
+      ExpoSpeechRecognition.stop();
+    }
     this.isListening = false;
   }
 }

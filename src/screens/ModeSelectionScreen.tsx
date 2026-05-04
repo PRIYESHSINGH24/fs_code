@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext, Mode, Tone, Language } from '../context/AppContext';
-import { User, GraduationCap, Dumbbell, Heart, Coffee, ShieldCheck, Smile, Flame, Target, Languages } from 'lucide-react';
+import { User, GraduationCap, Dumbbell, Heart, Coffee, ShieldCheck, Smile, Flame, Target, Languages, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const modes: { id: Mode; icon: any; color: string; desc: string }[] = [
@@ -29,79 +29,104 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
   const { mode, setMode, tone, setTone, language, setLanguage } = useAppContext();
 
   return (
-    <div className="flex flex-col min-h-screen p-6 bg-[#050505] text-white">
-      <div className="flex-1 max-w-sm mx-auto w-full space-y-8">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-white/40">Select Mode</h2>
-            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-              {languages.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => setLanguage(l.id)}
-                  className={`px-3 py-1 text-[10px] uppercase tracking-tighter font-bold rounded-lg transition-all ${
-                    language === l.id ? 'bg-white text-black shadow-lg shadow-black/20' : 'text-white/40'
+    <div className="flex flex-col min-h-screen p-6 text-white justify-center">
+      <div className="max-w-md mx-auto w-full space-y-12">
+        {/* Header */}
+        <header className="text-center space-y-3">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold tracking-tight text-glow"
+          >
+            Persona
+          </motion.h1>
+          <p className="text-white/40 text-sm font-medium tracking-widest uppercase">Select your companion</p>
+        </header>
+
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Mode</h2>
+              <div className="flex glass p-1 rounded-full border-white/5">
+                {languages.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => setLanguage(l.id)}
+                    className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-full transition-all ${
+                      language === l.id ? 'bg-white text-black shadow-xl' : 'text-white/40 hover:text-white/60'
+                    }`}
+                  >
+                    {l.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {modes.map((m, i) => (
+                <motion.button
+                  key={m.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setMode(m.id)}
+                  className={`group flex items-center gap-4 p-5 rounded-3xl border transition-all duration-500 overflow-hidden relative ${
+                    mode === m.id 
+                      ? 'bg-white/10 border-white/20 shadow-2xl shadow-white/5 ring-1 ring-white/10' 
+                      : 'bg-white/[0.02] border-white/5 hover:border-white/10'
                   }`}
                 >
-                  {l.name}
-                </button>
+                  {mode === m.id && (
+                    <motion.div 
+                      layoutId="active-bg"
+                      className="absolute inset-0 bg-gradient-to-r from-white/[0.05] to-transparent"
+                    />
+                  )}
+                  <div className={`p-3.5 rounded-2xl bg-black/50 border border-white/5 transition-transform group-hover:scale-110 ${m.color}`}>
+                    <m.icon className="w-5 h-5" />
+                  </div>
+                  <div className="text-left relative z-10">
+                    <div className="font-bold text-lg tracking-tight">{m.id}</div>
+                    <div className="text-xs text-white/40 font-medium">{m.desc}</div>
+                  </div>
+                </motion.button>
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            {modes.map((m) => (
-              <motion.button
-                key={m.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setMode(m.id)}
-                className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${
-                  mode === m.id ? 'bg-white/10 border-white/40 shadow-lg shadow-white/5' : 'bg-white/5 border-white/5'
-                }`}
-              >
-                <div className={`p-3 rounded-xl bg-black/40 ${m.color}`}>
-                  <m.icon className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold">{m.id}</div>
-                  <div className="text-xs text-white/40">{m.desc}</div>
-                </div>
-              </motion.button>
-            ))}
+
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 px-2">Tone</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {tones.map((t) => (
+                <motion.button
+                  key={t.id}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTone(t.id)}
+                  className={`flex flex-col items-center justify-center gap-3 p-4 rounded-3xl border transition-all ${
+                    tone === t.id 
+                      ? 'bg-white/10 border-white/20' 
+                      : 'bg-white/[0.02] border-white/5'
+                  }`}
+                >
+                  <t.icon className={`w-5 h-5 ${tone === t.id ? 'text-white' : 'text-white/20'}`} />
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${tone === t.id ? 'text-white' : 'text-white/30'}`}>{t.id}</span>
+                </motion.button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-white/40">Select Tone</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {tones.map((t) => (
-              <motion.button
-                key={t.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setTone(t.id)}
-                className={`flex items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${
-                  tone === t.id ? 'bg-white/10 border-white/40' : 'bg-white/5 border-white/5'
-                }`}
-              >
-                <t.icon className={`w-4 h-4 ${tone === t.id ? 'text-white' : 'text-white/40'}`} />
-                <span className={`text-sm font-medium ${tone === t.id ? 'text-white' : 'text-white/40'}`}>{t.id}</span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-4 space-y-3">
-          <button
+        <div className="pt-6">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onNext}
-            className="w-full py-4 bg-white text-black font-semibold rounded-2xl hover:bg-white/90 transition-all"
+            className="w-full py-5 bg-white text-black font-bold rounded-full hover:bg-white/90 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] flex items-center justify-center gap-3"
           >
-            Start Assistant
-          </button>
-          <button
-            onClick={onBack}
-            className="w-full py-4 bg-transparent text-white/40 font-medium rounded-2xl hover:text-white/60 transition-all text-sm"
-          >
-            Change API Key
-          </button>
+            <span>Initialize Session</span>
+            <Sparkles className="w-5 h-5" />
+          </motion.button>
         </div>
       </div>
     </div>

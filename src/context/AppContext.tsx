@@ -27,7 +27,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [apiKey, setApiKeyState] = useState<string>(localStorage.getItem('gemini_api_key') || '');
+  const [apiKey, setApiKeyState] = useState<string>(process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || '');
   const [mode, setMode] = useState<Mode>((localStorage.getItem('app_mode') as Mode) || 'Friend');
   const [tone, setTone] = useState<Tone>((localStorage.getItem('app_tone') as Tone) || 'Friendly');
   const [language, setLanguageState] = useState<Language>((localStorage.getItem('app_language') as Language) || 'en-US');

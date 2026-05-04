@@ -1,0 +1,12 @@
+{
+  "name": "Gemini Voice Assistant",
+  "description": "Real-time AI voice assistant with customizable personas and tones powered by Google Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "AI-powered voice interaction",
+    "Real-time speech-to-text and text-to-speech",
+    "Persona-based conversational models"
+  ]
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext, Mode, Tone, Language } from '../context/AppContext';
-import { User, GraduationCap, Dumbbell, Heart, Coffee, ShieldCheck, Smile, Flame, Target, Languages, Sparkles } from 'lucide-react';
+import { User, GraduationCap, Dumbbell, Heart, Coffee, ShieldCheck, Smile, Flame, Target, Languages, Sparkles, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const modes: { id: Mode; icon: any; color: string; desc: string }[] = [
@@ -16,7 +16,7 @@ const tones: { id: Tone; icon: any }[] = [
   { id: 'Friendly', icon: Smile },
   { id: 'Motivational', icon: Flame },
   { id: 'Strict', icon: ShieldCheck },
-  { id: 'Sarcastic', icon: Coffee },
+  { id: 'Sarcastic', icon: Zap },
   { id: 'Caring', icon: Heart },
 ];
 

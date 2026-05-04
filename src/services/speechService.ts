@@ -1,15 +1,15 @@
 import * as Speech from 'expo-speech';
+import { ExpoSpeechRecognition } from 'expo-speech-recognition';
 
 export class SpeechService {
   private isSpeaking: boolean = false;
+  private isListening: boolean = false;
 
   constructor() {}
 
   speak(text: string, lang: string = 'en-US', onEnd?: () => void) {
     this.stopSpeaking();
     
-    // expo-speech uses slightly different language codes sometimes, 
-    // but en-US and hi-IN are usually fine.
     Speech.speak(text, {
       language: lang,
       onDone: () => {
@@ -32,16 +32,54 @@ export class SpeechService {
     this.isSpeaking = false;
   }
 
-  // Note: Standard Expo doesn't have a built-in cross-platform STT library anymore.
-  // We recommend using @react-native-voice/voice or expo-speech-recognition for production.
-  // For now, this is a placeholder.
-  startListening(lang: string = 'en-US', onResult: (text: string) => void, onError: (err: any) => void) {
-    console.warn("Speech recognition requires native configuration. Please install @react-native-voice/voice.");
-    onError("Speech recognition not yet configured for native.");
+  async startListening(lang: string = 'en-US', onResult: (text: string) => void, onError: (err: any) => void) {
+    if (this.isListening) return;
+
+    try {
+      const result = await ExpoSpeechRecognition.requestPermissionsAsync();
+      if (!result.granted) {
+        onError('Permission denied');
+        return;
+      }
+
+      this.isListening = true;
+      
+      ExpoSpeechRecognition.start({
+        lang: lang,
+        interimResults: false,
+        maxAlternatives: 1,
+        continuous: false,
+      });
+
+      const resultListener = ExpoSpeechRecognition.addListener("result", (event) => {
+        const transcript = event.results[0]?.transcript;
+        if (transcript) {
+          onResult(transcript);
+        }
+      });
+
+      const errorListener = ExpoSpeechRecognition.addListener("error", (event) => {
+        console.error("Speech Recognition Error:", event.error);
+        onError(event.error);
+      });
+
+      const endListener = ExpoSpeechRecognition.addListener("end", () => {
+        this.isListening = false;
+        resultListener.remove();
+        errorListener.remove();
+        endListener.remove();
+      });
+
+    } catch (error) {
+      this.isListening = false;
+      console.error('STT Start Error:', error);
+      onError(String(error));
+    }
   }
 
   stopListening() {
-    // Placeholder
+    ExpoSpeechRecognition.stop();
+    this.isListening = false;
   }
 }
 

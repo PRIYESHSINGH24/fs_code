@@ -15,21 +15,34 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.geminivoiceassistant",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow the app to recognize your voice.",
+        "NSMicrophoneUsageDescription": "Allow the app to use the microphone for AI voice interaction."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.anonymous.geminivoiceassistant"
+      "package": "com.anonymous.geminivoiceassistant",
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-voice/voice",
-      "expo-speech-recognition"
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow the app to use the microphone for AI voice interaction.",
+          "speechRecognitionPermission": "Allow the app to recognize your voice."
+        }
+      ]
     ]
   }
 }

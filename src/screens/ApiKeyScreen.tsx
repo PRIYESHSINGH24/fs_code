@@ -7,94 +7,116 @@ import {
   ActivityIndicator, 
   StyleSheet,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { GeminiService } from '../services/geminiService';
-import { Key, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { Key, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react-native';
 
 export const ApiKeyScreen: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   const { apiKey, setApiKey } = useAppContext();
-  const [input, setInput] = useState(apiKey);
-  const [isValidating, setIsValidating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState(apiKey);
+  const [status, setStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [error, setError] = useState('');
 
-  const handleValidate = async () => {
-    if (!input) return;
-    setIsValidating(true);
-    setError(null);
-
+  const handleVerify = async () => {
+    if (!inputValue.trim()) return;
+    
+    setStatus('testing');
+    setError('');
+    
     try {
-      const service = new GeminiService(input);
-      const valid = await service.validateKey();
+      const gemini = new GeminiService(inputValue);
+      const isValid = await gemini.testConnection();
       
-      if (valid) {
-        await setApiKey(input);
-        onNext();
+      if (isValid) {
+        setStatus('success');
+        setApiKey(inputValue);
+        setTimeout(onNext, 1000);
       } else {
-        setError("Invalid API Key. Please check and try again.");
+        setStatus('error');
+        setError('Invalid API Key');
       }
-    } catch (e) {
-      setError("An error occurred during validation.");
-    } finally {
-      setIsValidating(false);
+    } catch (err) {
+      setStatus('error');
+      setError('Connection failed');
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.content}
-      >
-        <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Key size={32} color="white" />
-          </View>
-          <Text style={styles.title}>Welcome</Text>
-          <Text style={styles.subtitle}>Enter your Gemini API Key to get started</Text>
-        </View>
-
-        <View style={styles.form}>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder="Enter API Key"
-            placeholderTextColor="#666"
-            secureTextEntry
-            style={styles.input}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          {error && (
-            <View style={styles.errorContainer}>
-              <AlertCircle size={16} color="#f87171" />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity
-            onPress={handleValidate}
-            disabled={!input || isValidating}
-            style={[styles.button, (!input || isValidating) && styles.buttonDisabled]}
-          >
-            {isValidating ? (
-              <ActivityIndicator color="black" />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>Configure App</Text>
-                <CheckCircle2 size={20} color="black" />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.inner}
+        >
+          <View style={styles.content}>
+            {/* Logo Section */}
+            <View style={styles.logoContainer}>
+              <View style={styles.iconCircle}>
+                <Sparkles size={40} color="white" />
               </View>
-            )}
-          </TouchableOpacity>
-        </View>
+              <Text style={styles.title}>Gemini Voice</Text>
+              <Text style={styles.subtitle}>SECURE AI ACCESS</Text>
+            </View>
 
-        <Text style={styles.footer}>
-          Your key is stored locally and never sent to our servers.
-        </Text>
-      </KeyboardAvoidingView>
+            {/* Input Section */}
+            <View style={styles.form}>
+              <View style={[
+                styles.inputWrapper,
+                status === 'error' && styles.inputWrapperError,
+                status === 'success' && styles.inputWrapperSuccess
+              ]}>
+                <Key size={20} color="rgba(255,255,255,0.4)" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Gemini API Key"
+                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  value={inputValue}
+                  onChangeText={(val) => {
+                    setInputValue(val);
+                    if (status !== 'idle') setStatus('idle');
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              {status === 'error' && (
+                <View style={styles.errorContainer}>
+                  <AlertCircle size={14} color="#ef4444" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity 
+                onPress={handleVerify}
+                disabled={status === 'testing' || status === 'success'}
+                style={[
+                  styles.button,
+                  status === 'success' && styles.buttonSuccess
+                ]}
+              >
+                {status === 'testing' ? (
+                  <ActivityIndicator color="black" />
+                ) : status === 'success' ? (
+                  <CheckCircle2 size={24} color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Configure Session</Text>
+                )}
+              </TouchableOpacity>
+              
+              <Text style={styles.footerText}>
+                Your key is stored locally and never shared.
+              </Text>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -102,90 +124,110 @@ export const ApiKeyScreen: React.FC<{ onNext: () => void }> = ({ onNext }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: '#000',
+  },
+  inner: {
+    flex: 1,
   },
   content: {
     flex: 1,
+    paddingHorizontal: 40,
     justifyContent: 'center',
-    padding: 24,
-    gap: 40,
-  },
-  header: {
     alignItems: 'center',
-    gap: 12,
+    gap: 60,
   },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  logoContainer: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: 'white',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 4,
   },
   form: {
-    gap: 16,
+    width: '100%',
+    gap: 20,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    height: 64,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 20,
-    padding: 20,
+    gap: 12,
+  },
+  inputWrapperError: {
+    borderColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+  },
+  inputWrapperSuccess: {
+    borderColor: '#22c55e',
+    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+  },
+  input: {
+    flex: 1,
     color: 'white',
     fontSize: 16,
-    textAlign: 'center',
-    letterSpacing: 2,
+    height: '100%',
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(248,113,113,0.1)',
-    padding: 12,
-    borderRadius: 12,
+    paddingLeft: 4,
   },
   errorText: {
-    color: '#f87171',
-    fontSize: 14,
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '600',
   },
   button: {
     backgroundColor: 'white',
-    padding: 20,
+    height: 64,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 10,
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  buttonSuccess: {
+    backgroundColor: '#22c55e',
   },
   buttonText: {
     color: 'black',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  footer: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
+  footerText: {
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 11,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    lineHeight: 18,
   }
 });

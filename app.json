@@ -2,6 +2,7 @@
   "expo": {
     "name": "Gemini Voice Assistant",
     "slug": "gemini-voice-assistant",
+    "scheme": "gemini-voice",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,6 +36,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow the app to use the microphone for AI voice interaction.",
+          "speechRecognitionPermission": "Allow the app to recognize your voice."
+        }
+      ],
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "89727fe4-ba7c-4b3c-8126-1666c863d340"
+      }
     }
   }
 }

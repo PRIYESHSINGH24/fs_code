@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 export type Mode = 'Doctor' | 'Teacher' | 'Fitness Trainer' | 'Therapist' | 'Friend';
 export type Tone = 'Formal' | 'Friendly' | 'Motivational' | 'Strict' | 'Sarcastic' | 'Caring';
@@ -11,8 +14,9 @@ interface Message {
 }
 
 interface AppContextType {
+  user: User | null;
   apiKey: string;
-  setApiKey: (key: string) => void;
+  setApiKey: (key: string) => Promise<void>;
   mode: Mode;
   setMode: (mode: Mode) => void;
   tone: Tone;
@@ -22,12 +26,13 @@ interface AppContextType {
   history: Message[];
   addMessage: (msg: Message) => void;
   clearHistory: () => void;
-  isConfigured: boolean;
+  isLoaded: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [apiKey, setApiKeyState] = useState<string>('');
   const [mode, setModeState] = useState<Mode>('Friend');
   const [tone, setToneState] = useState<Tone>('Friendly');
@@ -35,10 +40,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [history, setHistory] = useState<Message[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // AUTHENTICATION (Firebase)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return unsubscribe;
+  }, []);
+
+  // LOAD SETTINGS (AsyncStorage)
   useEffect(() => {
     const loadData = async () => {
       try {
-        const savedKey = await AsyncStorage.getItem('gemini_api_key');
+        const savedKey = await SecureStore.getItemAsync('gemini_api_key');
         const envKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
         const finalKey = savedKey || envKey || '';
 
@@ -61,43 +75,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setApiKey = async (key: string) => {
     setApiKeyState(key);
-    await AsyncStorage.setItem('gemini_api_key', key);
+    await SecureStore.setItemAsync('gemini_api_key', key);
   };
 
-  const setMode = async (m: Mode) => {
+  const setMode = useCallback((m: Mode) => {
     setModeState(m);
-    await AsyncStorage.setItem('app_mode', m);
-  };
+    AsyncStorage.setItem('app_mode', m);
+  }, []);
 
-  const setTone = async (t: Tone) => {
+  const setTone = useCallback((t: Tone) => {
     setToneState(t);
-    await AsyncStorage.setItem('app_tone', t);
-  };
+    AsyncStorage.setItem('app_tone', t);
+  }, []);
 
-  const setLanguage = async (lang: Language) => {
-    setLanguageState(lang);
-    await AsyncStorage.setItem('app_language', lang);
-  };
+  const setLanguage = useCallback((l: Language) => {
+    setLanguageState(l);
+    AsyncStorage.setItem('app_language', l);
+  }, []);
 
-  const addMessage = (msg: Message) => {
-    setHistory(prev => [...prev, msg].slice(-10));
-  };
+  const addMessage = useCallback((msg: Message) => {
+    setHistory(prev => [...prev, msg]);
+  }, []);
 
-  const clearHistory = () => setHistory([]);
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+  }, []);
 
-  const isConfigured = !!apiKey;
-
-  if (!isLoaded) return null;
+  // PERFORMANCE OPTIMIZATION (useMemo)
+  const contextValue = useMemo(() => ({
+    user,
+    apiKey,
+    setApiKey,
+    mode,
+    setMode,
+    tone,
+    setTone,
+    language,
+    setLanguage,
+    history,
+    addMessage,
+    clearHistory,
+    isLoaded
+  }), [user, apiKey, mode, tone, language, history, isLoaded, setMode, setTone, setLanguage, addMessage, clearHistory]);
 
   return (
-    <AppContext.Provider value={{
-      apiKey, setApiKey,
-      mode, setMode,
-      tone, setTone,
-      language, setLanguage,
-      history, addMessage, clearHistory,
-      isConfigured
-    }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

@@ -37,13 +37,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-speech-recognition",
-        {
-          "microphonePermission": "Allow the app to use the microphone for AI voice interaction.",
-          "speechRecognitionPermission": "Allow the app to recognize your voice."
-        }
-      ]
+      // Temporarily disabled for Expo Go compatibility
+      // [
+      //   "expo-speech-recognition",
+      //   {
+      //     "microphonePermission": "Allow the app to use the microphone for AI voice interaction.",
+      //     "speechRecognitionPermission": "Allow the app to recognize your voice."
+      //   }
+      // ]
     ],
     "extra": {
       "eas": {

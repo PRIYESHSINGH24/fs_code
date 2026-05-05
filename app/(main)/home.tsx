@@ -45,11 +45,11 @@ const languages: { id: Language; name: string }[] = [
 
 export default function HomeScreen() {
   const { mode, setMode, tone, setTone, language, setLanguage } = useAppContext();
-  const [inspiration, setInspiration] = useState('');
+  const [inspiration, setInspiration] = React.useState('');
   const router = useRouter();
 
   // NETWORKING: Fetch example
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchInspiration = async () => {
       try {
         const response = await fetch('https://api.quotable.io/random?tags=motivational');

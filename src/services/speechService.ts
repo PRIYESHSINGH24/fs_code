@@ -1,11 +1,15 @@
 import * as Speech from 'expo-speech';
 
-// Dynamic import or safety check for native module
+// Extremely safe dynamic import
 let ExpoSpeechRecognition: any = null;
 try {
-  ExpoSpeechRecognition = require('expo-speech-recognition').ExpoSpeechRecognition;
+  // Use a lazy requirement to prevent bundle-time crashes
+  const module = require('expo-speech-recognition');
+  if (module && module.ExpoSpeechRecognition) {
+    ExpoSpeechRecognition = module.ExpoSpeechRecognition;
+  }
 } catch (e) {
-  console.warn('Speech Recognition native module not found. Voice input will be disabled.');
+  // Fallback silently during development
 }
 
 export class SpeechService {
@@ -16,34 +20,25 @@ export class SpeechService {
 
   async speak(text: string, lang: string = 'en-US', onEnd?: () => void) {
     try {
-      console.log(`[Audio] Attempting to speak in ${lang}: ${text.substring(0, 30)}...`);
-      
-      // Stop any current speech
+      if (!text) return;
       await Speech.stop();
       
-      const options = {
+      Speech.speak(text, {
         language: lang,
-        pitch: 1.0,
-        rate: 1.0,
         onDone: () => {
-          console.log('[Audio] Speech finished successfully');
           this.isSpeaking = false;
           if (onEnd) onEnd();
         },
         onStopped: () => {
-          console.log('[Audio] Speech stopped');
           this.isSpeaking = false;
         },
-        onError: (error: any) => {
-          console.error('[Audio] Speech error:', error);
+        onError: (error) => {
           this.isSpeaking = false;
         }
-      };
-
-      Speech.speak(text, options);
+      });
       this.isSpeaking = true;
     } catch (e) {
-      console.error('[Audio] TTS Critical Error:', e);
+      // Ignore TTS errors in dev
     }
   }
 
@@ -51,14 +46,11 @@ export class SpeechService {
     try {
       Speech.stop();
       this.isSpeaking = false;
-    } catch (e) {
-      console.error('[Audio] Stop error:', e);
-    }
+    } catch (e) {}
   }
 
   async startListening(lang: string = 'en-US', onResult: (text: string) => void, onError: (err: any) => void) {
     if (!ExpoSpeechRecognition) {
-      console.error('[Audio] STT not supported in this environment');
       onError('NATIVE_MODULE_MISSING');
       return;
     }
@@ -89,7 +81,6 @@ export class SpeechService {
       });
 
       const errorListener = ExpoSpeechRecognition.addListener("error", (event: any) => {
-        console.error("[Audio] STT Error:", event.error);
         onError(event.error);
       });
 
@@ -102,15 +93,16 @@ export class SpeechService {
 
     } catch (error) {
       this.isListening = false;
-      console.error('[Audio] STT Start Error:', error);
       onError(String(error));
     }
   }
 
   stopListening() {
-    if (ExpoSpeechRecognition) {
-      ExpoSpeechRecognition.stop();
-    }
+    try {
+      if (ExpoSpeechRecognition) {
+        ExpoSpeechRecognition.stop();
+      }
+    } catch (e) {}
     this.isListening = false;
   }
 }

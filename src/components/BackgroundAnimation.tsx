@@ -12,24 +12,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-const AuroraStreak = ({ color, top, left, duration, delay }: { color: string, top: number, left: number, duration: number, delay: number }) => {
-  const rotation = useSharedValue(0);
+const LiquidBlob = ({ color, size, duration, xRange, yRange }: { color: string, size: number, duration: number, xRange: [number, number], yRange: [number, number] }) => {
+  const translateX = useSharedValue(xRange[0]);
+  const translateY = useSharedValue(yRange[0]);
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.1);
 
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: duration * 2, easing: Easing.linear }),
-      -1,
-      false
-    );
-    scale.value = withRepeat(
-      withTiming(1.4, { duration: duration, easing: Easing.inOut(Easing.sin) }),
+    translateX.value = withRepeat(
+      withTiming(xRange[1], { duration: duration, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-    opacity.value = withRepeat(
-      withTiming(0.3, { duration: duration / 2, easing: Easing.inOut(Easing.sin) }),
+    translateY.value = withRepeat(
+      withTiming(yRange[1], { duration: duration * 1.2, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+    scale.value = withRepeat(
+      withTiming(1.3, { duration: duration * 0.8, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
@@ -37,21 +37,22 @@ const AuroraStreak = ({ color, top, left, duration, delay }: { color: string, to
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { rotate: `${rotation.value}deg` },
+      { translateX: translateX.value },
+      { translateY: translateY.value },
       { scale: scale.value },
     ],
-    opacity: opacity.value,
   }));
 
   return (
     <Animated.View style={[
-      styles.streak, 
+      styles.blob, 
       { 
         backgroundColor: color, 
-        top: top, 
-        left: left,
-        width: width * 1.5,
-        height: height * 0.4,
+        width: size, 
+        height: size, 
+        borderRadius: size / 2,
+        top: -size / 4,
+        left: -size / 4,
       }, 
       animatedStyle
     ]} />
@@ -62,18 +63,35 @@ export default function BackgroundAnimation() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#000', '#020617', '#0f172a']}
+        colors={['#020617', '#0f172a']}
         style={StyleSheet.absoluteFill}
       />
       
-      {/* Aurora Streaks */}
-      <AuroraStreak color="#3b82f6" top={-height * 0.2} left={-width * 0.5} duration={15000} delay={0} />
-      <AuroraStreak color="#8b5cf6" top={height * 0.3} left={-width * 0.2} duration={20000} delay={1000} />
-      <AuroraStreak color="#ec4899" top={height * 0.6} left={-width * 0.6} duration={18000} delay={2000} />
-      <AuroraStreak color="#06b6d4" top={-height * 0.1} left={width * 0.1} duration={22000} delay={3000} />
-
-      {/* Grainy Overlay for texture */}
-      <View style={styles.overlay} />
+      {/* Liquid Mesh Blobs */}
+      <LiquidBlob 
+        color="rgba(79, 70, 229, 0.3)" 
+        size={width * 1.2} 
+        duration={15000} 
+        xRange={[-width * 0.2, width * 0.2]} 
+        yRange={[-height * 0.1, height * 0.1]} 
+      />
+      <LiquidBlob 
+        color="rgba(124, 58, 237, 0.25)" 
+        size={width * 1.5} 
+        duration={18000} 
+        xRange={[width * 0.1, -width * 0.1]} 
+        yRange={[height * 0.2, -height * 0.2]} 
+      />
+      <LiquidBlob 
+        color="rgba(236, 72, 153, 0.15)" 
+        size={width * 1.3} 
+        duration={20000} 
+        xRange={[-width * 0.3, width * 0.3]} 
+        yRange={[-height * 0.2, height * 0.2]} 
+      />
+      
+      {/* The Overlay gives it that deep, glassy look */}
+      <View style={styles.glassOverlay} />
     </View>
   );
 }
@@ -84,13 +102,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000',
   },
-  streak: {
+  blob: {
     position: 'absolute',
-    borderRadius: width,
-    filter: 'blur(80px)', // Note: standard blur in CSS/Web, in RN we use blurRadius or just rely on overlap
+    opacity: 0.4,
   },
-  overlay: {
+  glassOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   }
 });

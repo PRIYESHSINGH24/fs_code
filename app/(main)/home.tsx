@@ -61,12 +61,11 @@ export default function HomeScreen() {
       <BackgroundAnimation />
       
       <View style={styles.content}>
-        {/* Header - Very Compact */}
         <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
           <View style={styles.topRow}>
             <View>
               <Text style={styles.welcomeText}>AURA SYSTEM</Text>
-              <Text style={styles.title}>Aether</Text>
+              <Text style={styles.title}>AURA AI</Text>
             </View>
             <View style={styles.languageToggle}>
               {languages.map((l) => (
@@ -83,7 +82,6 @@ export default function HomeScreen() {
         </Animated.View>
 
         <View style={styles.mainContainer}>
-          {/* Mode Selection - 2 Column Grid to save space */}
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Sparkles size={12} color="rgba(255,255,255,0.4)" />
@@ -113,7 +111,6 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* Tone Selection - Compact Horizontal or Wrap */}
           <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
              <View style={styles.sectionHeader}>
               <Zap size={12} color="rgba(255,255,255,0.4)" />
@@ -133,7 +130,6 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
 
-        {/* Action Button - Centered and High Visibility */}
         <Animated.View entering={FadeInUp.delay(600)} style={styles.footer}>
           <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.startButton}>
             <LinearGradient

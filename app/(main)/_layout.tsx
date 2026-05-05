@@ -55,7 +55,7 @@ export default function MainLayout() {
         name="home"
         options={{
           drawerLabel: 'Home',
-          title: 'Aura AI',
+          title: 'AURA AI',
           drawerIcon: ({ color }) => <Home size={20} color={color} />,
         }}
       />

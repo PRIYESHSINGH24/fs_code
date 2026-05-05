@@ -56,7 +56,7 @@ export default function LoginScreen() {
                 <Sparkles size={40} color="#fff" />
               </View>
             </View>
-            <Text style={styles.title}>Aura AI</Text>
+            <Text style={styles.title}>AURA AI</Text>
             <Text style={styles.subtitle}>Conversational Brilliance.</Text>
           </Animated.View>
 

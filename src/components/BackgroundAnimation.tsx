@@ -5,41 +5,31 @@ import Animated, {
   useAnimatedStyle, 
   withRepeat, 
   withTiming, 
-  withSequence,
-  withDelay,
-  Easing
+  Easing,
+  interpolate
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-const Orb = ({ color, size, delay, duration }: { color: string, size: number, delay: number, duration: number }) => {
-  const translateX = useSharedValue(Math.random() * width);
-  const translateY = useSharedValue(Math.random() * height);
+const AuroraStreak = ({ color, top, left, duration, delay }: { color: string, top: number, left: number, duration: number, delay: number }) => {
+  const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.2);
+  const opacity = useSharedValue(0.1);
 
   useEffect(() => {
-    translateX.value = withRepeat(
-      withTiming(Math.random() * width, { duration: duration * 1.5, easing: Easing.inOut(Easing.sin) }),
+    rotation.value = withRepeat(
+      withTiming(360, { duration: duration * 2, easing: Easing.linear }),
       -1,
-      true
-    );
-    translateY.value = withRepeat(
-      withTiming(Math.random() * height, { duration: duration * 1.2, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
+      false
     );
     scale.value = withRepeat(
-      withTiming(1.5, { duration: duration, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1.4, { duration: duration, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
     opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.4, { duration: duration / 2 }),
-        withTiming(0.1, { duration: duration / 2 })
-      ),
+      withTiming(0.3, { duration: duration / 2, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
@@ -47,15 +37,24 @@ const Orb = ({ color, size, delay, duration }: { color: string, size: number, de
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
+      { rotate: `${rotation.value}deg` },
       { scale: scale.value },
     ],
     opacity: opacity.value,
   }));
 
   return (
-    <Animated.View style={[styles.orb, { width: size, height: size, borderRadius: size / 2, backgroundColor: color }, animatedStyle]} />
+    <Animated.View style={[
+      styles.streak, 
+      { 
+        backgroundColor: color, 
+        top: top, 
+        left: left,
+        width: width * 1.5,
+        height: height * 0.4,
+      }, 
+      animatedStyle
+    ]} />
   );
 };
 
@@ -63,13 +62,18 @@ export default function BackgroundAnimation() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#000', '#050510', '#0a0a20']}
+        colors={['#000', '#020617', '#0f172a']}
         style={StyleSheet.absoluteFill}
       />
-      <Orb color="#4f46e5" size={width * 0.8} delay={0} duration={8000} />
-      <Orb color="#7c3aed" size={width * 0.6} delay={1000} duration={10000} />
-      <Orb color="#2563eb" size={width * 0.7} delay={2000} duration={12000} />
-      <Orb color="#db2777" size={width * 0.5} delay={3000} duration={9000} />
+      
+      {/* Aurora Streaks */}
+      <AuroraStreak color="#3b82f6" top={-height * 0.2} left={-width * 0.5} duration={15000} delay={0} />
+      <AuroraStreak color="#8b5cf6" top={height * 0.3} left={-width * 0.2} duration={20000} delay={1000} />
+      <AuroraStreak color="#ec4899" top={height * 0.6} left={-width * 0.6} duration={18000} delay={2000} />
+      <AuroraStreak color="#06b6d4" top={-height * 0.1} left={width * 0.1} duration={22000} delay={3000} />
+
+      {/* Grainy Overlay for texture */}
+      <View style={styles.overlay} />
     </View>
   );
 }
@@ -80,9 +84,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000',
   },
-  orb: {
+  streak: {
     position: 'absolute',
-    top: -width * 0.4,
-    left: -width * 0.4,
+    borderRadius: width,
+    filter: 'blur(80px)', // Note: standard blur in CSS/Web, in RN we use blurRadius or just rely on overlap
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  }
 });

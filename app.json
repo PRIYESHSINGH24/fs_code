@@ -29,7 +29,8 @@
       },
       "package": "com.anonymous.geminivoiceassistant",
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -43,6 +44,11 @@
           "speechRecognitionPermission": "Allow the app to recognize your voice."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "89727fe4-ba7c-4b3c-8126-1666c863d340"
+      }
+    }
   }
 }

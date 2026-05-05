@@ -14,26 +14,36 @@ export class SpeechService {
 
   constructor() {}
 
-  speak(text: string, lang: string = 'en-US', onEnd?: () => void) {
+  async speak(text: string, lang: string = 'en-US', onEnd?: () => void) {
     try {
-      this.stopSpeaking();
-      Speech.speak(text, {
+      console.log(`[Audio] Attempting to speak in ${lang}: ${text.substring(0, 30)}...`);
+      
+      // Stop any current speech
+      await Speech.stop();
+      
+      const options = {
         language: lang,
+        pitch: 1.0,
+        rate: 1.0,
         onDone: () => {
+          console.log('[Audio] Speech finished successfully');
           this.isSpeaking = false;
           if (onEnd) onEnd();
         },
         onStopped: () => {
+          console.log('[Audio] Speech stopped');
           this.isSpeaking = false;
         },
-        onError: (error) => {
-          console.error('Speech error:', error);
+        onError: (error: any) => {
+          console.error('[Audio] Speech error:', error);
           this.isSpeaking = false;
         }
-      });
+      };
+
+      Speech.speak(text, options);
       this.isSpeaking = true;
     } catch (e) {
-      console.error('TTS Speak Error:', e);
+      console.error('[Audio] TTS Critical Error:', e);
     }
   }
 
@@ -41,11 +51,14 @@ export class SpeechService {
     try {
       Speech.stop();
       this.isSpeaking = false;
-    } catch (e) {}
+    } catch (e) {
+      console.error('[Audio] Stop error:', e);
+    }
   }
 
   async startListening(lang: string = 'en-US', onResult: (text: string) => void, onError: (err: any) => void) {
     if (!ExpoSpeechRecognition) {
+      console.error('[Audio] STT not supported in this environment');
       onError('NATIVE_MODULE_MISSING');
       return;
     }
@@ -76,7 +89,7 @@ export class SpeechService {
       });
 
       const errorListener = ExpoSpeechRecognition.addListener("error", (event: any) => {
-        console.error("Speech Recognition Error:", event.error);
+        console.error("[Audio] STT Error:", event.error);
         onError(event.error);
       });
 
@@ -89,7 +102,7 @@ export class SpeechService {
 
     } catch (error) {
       this.isListening = false;
-      console.error('STT Start Error:', error);
+      console.error('[Audio] STT Start Error:', error);
       onError(String(error));
     }
   }

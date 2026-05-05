@@ -3,13 +3,11 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  ScrollView, 
   StyleSheet
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext, Mode, Tone, Language } from '../context/AppContext';
 import { 
-  User, 
   GraduationCap, 
   Dumbbell, 
   Heart, 
@@ -23,11 +21,11 @@ import {
 } from 'lucide-react-native';
 
 const modes: { id: Mode; icon: any; color: string; desc: string }[] = [
-  { id: 'Doctor', icon: ShieldCheck, color: '#60a5fa', desc: 'Secure medical advice' },
-  { id: 'Teacher', icon: GraduationCap, color: '#facc15', desc: 'Patient learning assistant' },
-  { id: 'Fitness Trainer', icon: Dumbbell, color: '#4ade80', desc: 'Actionable workout steps' },
+  { id: 'Doctor', icon: ShieldCheck, color: '#60a5fa', desc: 'Medical advice' },
+  { id: 'Teacher', icon: GraduationCap, color: '#facc15', desc: 'Learning assistant' },
+  { id: 'Fitness Trainer', icon: Dumbbell, color: '#4ade80', desc: 'Workout steps' },
   { id: 'Therapist', icon: Heart, color: '#f472b6', desc: 'Empathetic listener' },
-  { id: 'Friend', icon: Coffee, color: '#fb923c', desc: 'Casual relatable chat' },
+  { id: 'Friend', icon: Coffee, color: '#fb923c', desc: 'Casual chat' },
 ];
 
 const tones: { id: Tone; icon: any }[] = [
@@ -40,8 +38,8 @@ const tones: { id: Tone; icon: any }[] = [
 ];
 
 const languages: { id: Language; name: string }[] = [
-  { id: 'en-US', name: 'English' },
-  { id: 'hi-IN', name: 'Hindi' },
+  { id: 'en-US', name: 'EN' },
+  { id: 'hi-IN', name: 'HI' },
 ];
 
 export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => void }> = ({ onNext, onBack }) => {
@@ -49,12 +47,14 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Persona</Text>
-          <Text style={styles.subtitle}>SELECT YOUR COMPANION</Text>
+          <Text style={styles.subtitle}>CHOOSE YOUR COMPANION</Text>
         </View>
 
+        {/* Mode Selection */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionLabel}>MODE</Text>
@@ -63,17 +63,9 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
                 <TouchableOpacity
                   key={l.id}
                   onPress={() => setLanguage(l.id)}
-                  style={[
-                    styles.langButton,
-                    language === l.id && styles.langButtonActive
-                  ]}
+                  style={[styles.langButton, language === l.id && styles.langButtonActive]}
                 >
-                  <Text style={[
-                    styles.langText,
-                    language === l.id && styles.langTextActive
-                  ]}>
-                    {l.name}
-                  </Text>
+                  <Text style={[styles.langText, language === l.id && styles.langTextActive]}>{l.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -84,23 +76,18 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
               <TouchableOpacity
                 key={m.id}
                 onPress={() => setMode(m.id)}
-                style={[
-                  styles.modeCard,
-                  mode === m.id && styles.modeCardActive
-                ]}
+                style={[styles.modeCard, mode === m.id && styles.modeCardActive]}
               >
                 <View style={styles.modeIconContainer}>
-                  <m.icon size={20} color={m.color} />
+                  <m.icon size={18} color={m.color} />
                 </View>
-                <View style={styles.modeTextContainer}>
-                  <Text style={styles.modeName}>{m.id}</Text>
-                  <Text style={styles.modeDesc}>{m.desc}</Text>
-                </View>
+                <Text style={styles.modeName}>{m.id}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
+        {/* Tone Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>TONE</Text>
           <View style={styles.tonesGrid}>
@@ -108,28 +95,20 @@ export const ModeSelectionScreen: React.FC<{ onNext: () => void; onBack: () => v
               <TouchableOpacity
                 key={t.id}
                 onPress={() => setTone(t.id)}
-                style={[
-                  styles.toneCard,
-                  tone === t.id && styles.toneCardActive
-                ]}
+                style={[styles.toneCard, tone === t.id && styles.toneCardActive]}
               >
-                <t.icon size={20} color={tone === t.id ? 'white' : 'rgba(255,255,255,0.2)'} />
-                <Text style={[
-                  styles.toneText,
-                  tone === t.id && styles.toneTextActive
-                ]}>
-                  {t.id}
-                </Text>
+                <Text style={[styles.toneText, tone === t.id && styles.toneTextActive]}>{t.id}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
+        {/* Bottom Button */}
         <TouchableOpacity onPress={onNext} style={styles.nextButton}>
-          <Text style={styles.nextButtonText}>Initialize Session</Text>
+          <Text style={styles.nextButtonText}>Start Conversation</Text>
           <Sparkles size={20} color="black" />
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -139,14 +118,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  scrollContent: {
-    padding: 24,
-    gap: 32,
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingVertical: 20,
   },
   header: {
     alignItems: 'center',
-    marginTop: 20,
-    gap: 8,
+    gap: 4,
   },
   title: {
     fontSize: 40,
@@ -155,37 +135,35 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 2,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 3,
   },
   section: {
-    gap: 16,
+    gap: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'between',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 4,
   },
   sectionLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.3)',
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.2)',
     letterSpacing: 2,
-    flex: 1,
   },
   languageToggle: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 2,
   },
   langButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   langButtonActive: {
     backgroundColor: 'white',
@@ -193,86 +171,75 @@ const styles = StyleSheet.create({
   langText: {
     fontSize: 10,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.3)',
   },
   langTextActive: {
     color: 'black',
   },
   modesGrid: {
-    gap: 12,
+    gap: 8,
   },
   modeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 16,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    gap: 16,
-  },
-  modeCardActive: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  modeIconContainer: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
     padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
+    gap: 12,
   },
-  modeTextContainer: {
-    flex: 1,
+  modeCardActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  modeIconContainer: {
+    width: 36,
+    height: 36,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modeName: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: 'white',
-  },
-  modeDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
   },
   tonesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-  },
-  toneCard: {
-    width: '31%',
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
     gap: 8,
   },
+  toneCard: {
+    flex: 1,
+    minWidth: '30%',
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
   toneCardActive: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,1)',
   },
   toneText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 1,
   },
   toneTextActive: {
-    color: 'white',
+    color: 'black',
   },
   nextButton: {
     backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 30,
+    height: 64,
+    borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    marginTop: 10,
-    marginBottom: 40,
   },
   nextButtonText: {
     color: 'black',

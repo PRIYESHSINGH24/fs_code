@@ -8,7 +8,7 @@ import {
   ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, withSpring, withHover } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAppContext, Mode, Tone, Language } from '../../src/context/AppContext';
 import { 
   GraduationCap, 
@@ -21,10 +21,12 @@ import {
   Target, 
   Sparkles,
   Zap,
-  Globe
+  Globe,
+  ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import BackgroundAnimation from '../../src/components/BackgroundAnimation';
 
 const { width } = Dimensions.get('window');
 
@@ -70,17 +72,14 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#000', '#0f172a']}
-        style={StyleSheet.absoluteFill}
-      />
+      <BackgroundAnimation />
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome Back,</Text>
-          <Text style={styles.title}>Define Persona</Text>
+          <Text style={styles.welcomeText}>Welcome to the Future,</Text>
+          <Text style={styles.title}>Aura Pulse</Text>
           {inspiration ? (
-            <BlurView intensity={10} style={styles.inspirationCard}>
+            <BlurView intensity={20} tint="dark" style={styles.inspirationCard}>
               <Text style={styles.inspirationText}>"{inspiration}"</Text>
             </BlurView>
           ) : null}
@@ -110,23 +109,21 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Sparkles size={16} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.sectionLabel}>COMPANION MODE</Text>
+              <Text style={styles.sectionLabel}>CORE FREQUENCY</Text>
             </View>
             <View style={styles.modesGrid}>
-              {modes.map((m, index) => (
+              {modes.map((m) => (
                 <TouchableOpacity
                   key={m.id}
                   onPress={() => setMode(m.id)}
                   style={styles.modeCardWrapper}
                 >
-                  <BlurView intensity={mode === m.id ? 40 : 10} tint="dark" style={[
+                  <BlurView intensity={mode === m.id ? 50 : 20} tint="dark" style={[
                     styles.modeCard,
-                    mode === m.id && { borderColor: m.color[0], borderWidth: 1.5 }
+                    mode === m.id && { borderColor: m.color[0], borderWidth: 2 }
                   ]}>
                     <LinearGradient
                       colors={mode === m.id ? m.color : ['transparent', 'transparent']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
                       style={styles.modeIconBg}
                     >
                       <m.icon size={24} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.5)'} />
@@ -145,7 +142,7 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInDown.delay(600)} style={styles.section}>
              <View style={styles.sectionHeader}>
               <Zap size={16} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.sectionLabel}>CONVERSATION TONE</Text>
+              <Text style={styles.sectionLabel}>VIBRATIONAL TONE</Text>
             </View>
             <View style={styles.tonesGrid}>
               {tones.map((t) => (
@@ -163,10 +160,10 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInUp.delay(800)}>
             <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.startButton}>
               <LinearGradient
-                colors={['#fff', '#f8fafc']}
+                colors={['#fff', '#e2e8f0']}
                 style={styles.startButtonGradient}
               >
-                <Text style={styles.startButtonText}>Begin Session</Text>
+                <Text style={styles.startButtonText}>Initiate Sequence</Text>
                 <ChevronRight size={22} color="#000" />
               </LinearGradient>
             </TouchableOpacity>
@@ -176,8 +173,6 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-import { ChevronRight } from 'lucide-react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -195,33 +190,34 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.5)',
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   title: {
-    fontSize: 40,
-    fontWeight: '800',
+    fontSize: 48,
+    fontWeight: '900',
     color: '#fff',
-    letterSpacing: -1,
+    letterSpacing: -2,
   },
   inspirationCard: {
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 20,
+    marginTop: 20,
+    padding: 20,
+    borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   inspirationText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.6)',
     fontStyle: 'italic',
-    lineHeight: 20,
+    lineHeight: 22,
     textAlign: 'center',
+    fontWeight: '500',
   },
   content: {
     padding: 24,
-    gap: 32,
+    gap: 40,
   },
   section: {
     gap: 16,
@@ -233,82 +229,81 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 2,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 3,
   },
   languageToggle: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 20,
-    padding: 6,
-    gap: 4,
+    borderRadius: 24,
+    padding: 8,
+    gap: 8,
   },
   langButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 18,
   },
   langButtonActive: {
-    backgroundColor: 'rgba(255,255,255,1)',
+    backgroundColor: '#fff',
   },
   langText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: 'rgba(255,255,255,0.4)',
   },
   langTextActive: {
     color: '#000',
   },
   modesGrid: {
-    gap: 12,
+    gap: 16,
   },
   modeCardWrapper: {
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   modeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    gap: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 20,
+    gap: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
   modeIconBg: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   modeInfo: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   modeName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: 20,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.6)',
   },
   modeDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.3)',
-    fontWeight: '500',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '600',
   },
   tonesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   toneCard: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
@@ -317,18 +312,18 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   toneText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
+    fontSize: 14,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.5)',
   },
   toneTextActive: {
     color: '#000',
   },
   startButton: {
-    height: 72,
-    borderRadius: 24,
+    height: 76,
+    borderRadius: 28,
     overflow: 'hidden',
-    marginTop: 8,
+    marginTop: 12,
   },
   startButtonGradient: {
     flex: 1,
@@ -339,7 +334,7 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     color: '#000',
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
   }
 });

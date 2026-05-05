@@ -12,15 +12,16 @@ import {
   Keyboard,
   Dimensions
 } from 'react-native';
-import Animated, { FadeInRight, FadeInLeft, SlideInBottom } from 'react-native-reanimated';
+import Animated, { FadeInRight, FadeInLeft } from 'react-native-reanimated';
 import { useAppContext } from '../../src/context/AppContext';
 import { GeminiService } from '../../src/services/geminiService';
 import { speechService } from '../../src/services/speechService';
-import { Mic, Send, Bot, User, Trash2, Info } from 'lucide-react-native';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { Mic, Send, Bot, User, Trash2 } from 'lucide-react-native';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../src/config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import BackgroundAnimation from '../../src/components/BackgroundAnimation';
 
 const { width } = Dimensions.get('window');
 
@@ -28,22 +29,24 @@ const MessageItem = React.memo(({ item }: { item: any }) => {
   const isUser = item.role === 'user';
   return (
     <Animated.View 
-      entering={isUser ? FadeInRight.duration(400) : FadeInLeft.duration(400)}
+      entering={isUser ? FadeInRight.duration(500) : FadeInLeft.duration(500)}
       style={[styles.messageRow, isUser ? styles.userRow : styles.modelRow]}
     >
       {!isUser && (
-        <LinearGradient colors={['#3b82f6', '#2563eb']} style={styles.avatar}>
+        <LinearGradient colors={['#4f46e5', '#7c3aed']} style={styles.avatar}>
           <Bot size={14} color="#fff" />
         </LinearGradient>
       )}
-      <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.modelBubble]}>
-        <Text style={[styles.messageText, isUser ? styles.userText : styles.modelText]}>
-          {item.text}
-        </Text>
+      <View style={styles.bubbleWrapper}>
+        <BlurView intensity={isUser ? 0 : 40} tint="dark" style={[styles.messageBubble, isUser ? styles.userBubble : styles.modelBubble]}>
+          <Text style={[styles.messageText, isUser ? styles.userText : styles.modelText]}>
+            {item.text}
+          </Text>
+        </BlurView>
       </View>
       {isUser && (
-        <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.avatar}>
-          <User size={14} color="#fff" />
+        <LinearGradient colors={['#fff', '#e2e8f0']} style={styles.avatar}>
+          <User size={14} color="#000" />
         </LinearGradient>
       )}
     </Animated.View>
@@ -97,7 +100,7 @@ export default function ChatScreen() {
         });
       }
     } catch (error) {
-      addMessage({ role: 'model', text: 'Connection lost. Please check your settings.' });
+      addMessage({ role: 'model', text: 'Vibrational alignment lost. Reconnecting...' });
     } finally {
       setIsTyping(false);
     }
@@ -118,20 +121,17 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#000', '#0f172a']} style={StyleSheet.absoluteFill} />
-      
-      {/* Dynamic Background Pattern (Subtle dots) */}
-      <View style={styles.pattern} />
+      <BackgroundAnimation />
 
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <View style={styles.statusDot} />
+          <View style={styles.pulseDot} />
           <View>
-            <Text style={styles.statusText}>{isTyping ? 'GEMINI IS THINKING...' : 'LIVE SESSION'}</Text>
+            <Text style={styles.statusText}>{isTyping ? 'AURA IS VIBRATING...' : 'SYNCED'}</Text>
             <Text style={styles.modeText}>{mode} • {tone}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.clearBtn} onPress={clearHistory}>
+        <TouchableOpacity style={styles.headerBtn} onPress={clearHistory}>
           <Trash2 size={18} color="rgba(255,255,255,0.4)" />
         </TouchableOpacity>
       </View>
@@ -150,12 +150,12 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <BlurView intensity={30} tint="dark" style={styles.inputArea}>
+        <BlurView intensity={40} tint="dark" style={styles.inputArea}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Ask anything..."
-              placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholder="Communicate with Aura..."
+              placeholderTextColor="rgba(255,255,255,0.4)"
               value={inputText}
               onChangeText={setInputText}
               multiline
@@ -165,14 +165,14 @@ export default function ChatScreen() {
                 style={[styles.actionBtn, isListening && styles.listeningBtn]} 
                 onPress={toggleListening}
               >
-                <Mic size={20} color={isListening ? '#ef4444' : 'rgba(255,255,255,0.6)'} />
+                <Mic size={22} color={isListening ? '#ef4444' : 'rgba(255,255,255,0.7)'} />
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.sendBtn} 
                 onPress={() => handleSendMessage(inputText)}
-                disabled={!inputText.trim() && !isListening}
+                disabled={!inputText.trim()}
               >
-                <LinearGradient colors={['#fff', '#e2e8f0']} style={styles.sendBtnGradient}>
+                <LinearGradient colors={['#fff', '#e2e8f0']} style={styles.sendBtnInner}>
                   <Send size={18} color="#000" />
                 </LinearGradient>
               </TouchableOpacity>
@@ -189,64 +189,56 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  pattern: {
-    position: 'absolute',
-    width: width,
-    height: '100%',
-    opacity: 0.05,
-    backgroundColor: 'transparent',
-    // In a real app we'd use a small SVG pattern here
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
-    shadowColor: '#10b981',
-    shadowRadius: 4,
-    shadowOpacity: 0.5,
+  pulseDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4f46e5',
+    shadowColor: '#4f46e5',
+    shadowRadius: 10,
+    shadowOpacity: 1,
   },
   statusText: {
     fontSize: 10,
     fontWeight: '900',
     color: '#fff',
-    letterSpacing: 1.5,
+    letterSpacing: 2,
   },
   modeText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600',
   },
-  clearBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+  headerBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   listContent: {
-    padding: 20,
-    gap: 20,
+    padding: 24,
+    gap: 24,
   },
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 10,
+    gap: 12,
     maxWidth: '85%',
   },
   userRow: {
@@ -256,14 +248,18 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bubbleWrapper: {
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
   messageBubble: {
-    padding: 16,
+    padding: 18,
     borderRadius: 24,
   },
   userBubble: {
@@ -271,14 +267,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   modelBubble: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderBottomLeftRadius: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 26,
     fontWeight: '500',
   },
   userText: {
@@ -288,50 +284,50 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   inputArea: {
-    padding: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 38 : 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 28,
-    padding: 6,
-    paddingLeft: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 32,
+    padding: 8,
+    paddingLeft: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   input: {
     flex: 1,
     color: '#fff',
     fontSize: 16,
     maxHeight: 120,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   actionBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   listeningBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     overflow: 'hidden',
   },
-  sendBtnGradient: {
+  sendBtnInner: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',

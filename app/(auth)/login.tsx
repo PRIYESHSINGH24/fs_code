@@ -14,11 +14,9 @@ import { Link, useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../src/config/firebase';
 import { Sparkles, Mail, Lock, LogIn, ChevronRight } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import Animated, { FadeIn, FadeInDown, SlideInBottom } from 'react-native-reanimated';
-
-const { width, height } = Dimensions.get('window');
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import BackgroundAnimation from '../../src/components/BackgroundAnimation';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -45,15 +43,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Background Mesh Gradient */}
-      <LinearGradient
-        colors={['#0f172a', '#1e1b4b', '#312e81']}
-        style={StyleSheet.absoluteFill}
-      />
-      
-      {/* Animated Glowing Orbs */}
-      <Animated.View entering={FadeIn.delay(500).duration(2000)} style={[styles.orb, styles.orb1]} />
-      <Animated.View entering={FadeIn.delay(800).duration(2000)} style={[styles.orb, styles.orb2]} />
+      <BackgroundAnimation />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -62,19 +52,16 @@ export default function LoginScreen() {
         <View style={styles.content}>
           <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
             <View style={styles.logoWrapper}>
-              <LinearGradient
-                colors={['#818cf8', '#c084fc']}
-                style={styles.logoGradient}
-              >
+              <View style={styles.logoIcon}>
                 <Sparkles size={40} color="#fff" />
-              </LinearGradient>
+              </View>
             </View>
-            <Text style={styles.title}>Gemini AI</Text>
-            <Text style={styles.subtitle}>Your intelligence, evolved.</Text>
+            <Text style={styles.title}>Aura AI</Text>
+            <Text style={styles.subtitle}>Conversational Brilliance.</Text>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(300).duration(1000)} style={styles.formContainer}>
-            <BlurView intensity={20} tint="dark" style={styles.glassCard}>
+            <BlurView intensity={30} tint="dark" style={styles.glassCard}>
               <View style={styles.inputGroup}>
                 <View style={styles.inputContainer}>
                   <Mail size={18} color="rgba(255,255,255,0.5)" />
@@ -108,28 +95,25 @@ export default function LoginScreen() {
                 onPress={handleLogin}
                 disabled={loading}
               >
-                <LinearGradient
-                  colors={['#fff', '#e2e8f0']}
-                  style={styles.buttonGradient}
-                >
+                <View style={styles.buttonInner}>
                   {loading ? (
                     <ActivityIndicator color="#000" />
                   ) : (
                     <>
-                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <Text style={styles.loginButtonText}>Enter Aura</Text>
                       <ChevronRight size={20} color="#000" />
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </BlurView>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(600).duration(1000)} style={styles.footer}>
-            <Text style={styles.footerText}>New here?</Text>
+            <Text style={styles.footerText}>New to the experience?</Text>
             <Link href="/(auth)/signup" asChild>
               <TouchableOpacity>
-                <Text style={styles.signupLink}>Create an account</Text>
+                <Text style={styles.signupLink}>Create Account</Text>
               </TouchableOpacity>
             </Link>
           </Animated.View>
@@ -143,23 +127,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
-  },
-  orb: {
-    position: 'absolute',
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: width * 0.4,
-    opacity: 0.15,
-  },
-  orb1: {
-    top: -width * 0.2,
-    right: -width * 0.2,
-    backgroundColor: '#818cf8',
-  },
-  orb2: {
-    bottom: -width * 0.1,
-    left: -width * 0.3,
-    backgroundColor: '#c084fc',
   },
   keyboardView: {
     flex: 1,
@@ -179,33 +146,38 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  logoGradient: {
+  logoIcon: {
     width: 80,
     height: 80,
     borderRadius: 20,
+    backgroundColor: '#4f46e5',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#4f46e5',
+    shadowRadius: 20,
+    shadowOpacity: 0.5,
   },
   title: {
-    fontSize: 36,
-    fontWeight: '800',
+    fontSize: 42,
+    fontWeight: '900',
     color: '#fff',
-    letterSpacing: -1,
+    letterSpacing: -2,
   },
   subtitle: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.5)',
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 1,
   },
   formContainer: {
     borderRadius: 32,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   glassCard: {
     padding: 24,
     gap: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   inputGroup: {
     gap: 12,
@@ -218,8 +190,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 64,
     gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   input: {
     flex: 1,
@@ -230,10 +200,10 @@ const styles = StyleSheet.create({
   loginButton: {
     height: 64,
     borderRadius: 20,
-    overflow: 'hidden',
+    backgroundColor: '#fff',
     marginTop: 8,
   },
-  buttonGradient: {
+  buttonInner: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -243,13 +213,13 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: '#000',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   errorText: {
     color: '#f87171',
     fontSize: 14,
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
@@ -258,12 +228,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footerText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.4)',
     fontSize: 15,
   },
   signupLink: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   }
 });

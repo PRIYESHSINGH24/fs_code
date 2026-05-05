@@ -8,7 +8,7 @@ import {
   Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, withRepeat, withTiming, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useAppContext, Mode, Tone, Language } from '../../src/context/AppContext';
 import { 
   GraduationCap, 
@@ -21,7 +21,6 @@ import {
   Target, 
   Sparkles,
   Zap,
-  Globe,
   ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -61,83 +60,77 @@ export default function HomeScreen() {
       <BackgroundAnimation />
       
       <View style={styles.content}>
-        <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
-          <View style={styles.topRow}>
-            <View>
-              <Text style={styles.welcomeText}>AURA SYSTEM</Text>
-              <Text style={styles.title}>AURA AI</Text>
+        {/* Header Section */}
+        <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.statusBadge}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>AURA CORE ONLINE</Text>
             </View>
-            <View style={styles.languageToggle}>
+            <View style={styles.langContainer}>
               {languages.map((l) => (
                 <TouchableOpacity
                   key={l.id}
                   onPress={() => setLanguage(l.id)}
-                  style={[styles.langButton, language === l.id && styles.langButtonActive]}
+                  style={[styles.langItem, language === l.id && styles.langItemActive]}
                 >
                   <Text style={[styles.langText, language === l.id && styles.langTextActive]}>{l.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
+          <Text style={styles.title}>AURA AI</Text>
         </Animated.View>
 
-        <View style={styles.mainContainer}>
-          <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Sparkles size={12} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.sectionLabel}>PERSONA FREQUENCY</Text>
+        {/* The Unified Command Panel */}
+        <Animated.View entering={FadeInDown.delay(300).duration(1000)} style={styles.panelContainer}>
+          <BlurView intensity={25} tint="dark" style={styles.panel}>
+            <View style={styles.panelSection}>
+              <Text style={styles.sectionTitle}>SELECT FREQUENCY</Text>
+              <View style={styles.modesGrid}>
+                {modes.map((m) => (
+                  <TouchableOpacity
+                    key={m.id}
+                    onPress={() => setMode(m.id as any)}
+                    style={[styles.modeItem, mode === m.id && styles.modeItemActive]}
+                  >
+                    <View style={[styles.iconBox, mode === m.id && { backgroundColor: m.color[0] }]}>
+                      <m.icon size={20} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.4)'} />
+                    </View>
+                    <Text style={[styles.modeLabel, mode === m.id && styles.modeLabelActive]}>{m.id}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-            <View style={styles.modesGrid}>
-              {modes.map((m) => (
-                <TouchableOpacity
-                  key={m.id}
-                  onPress={() => setMode(m.id as any)}
-                  style={[styles.modeCardWrapper, { width: (width - 60) / 2 }]}
-                >
-                  <BlurView intensity={mode === m.id ? 60 : 15} tint="dark" style={[
-                    styles.modeCard,
-                    mode === m.id && { borderColor: m.color[0], borderWidth: 1 }
-                  ]}>
-                    <LinearGradient
-                      colors={mode === m.id ? m.color : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.05)']}
-                      style={styles.modeIconBg}
-                    >
-                      <m.icon size={18} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.4)'} />
-                    </LinearGradient>
-                    <Text style={[styles.modeName, mode === m.id && { color: '#fff' }]}>{m.id}</Text>
-                  </BlurView>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
-             <View style={styles.sectionHeader}>
-              <Zap size={12} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.sectionLabel}>VIBRATIONAL TONE</Text>
-            </View>
-            <View style={styles.tonesGrid}>
-              {tones.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  onPress={() => setTone(t.id)}
-                  style={[styles.toneCard, tone === t.id && styles.toneCardActive]}
-                >
-                  <Text style={[styles.toneText, tone === t.id && styles.toneTextActive]}>{t.id}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Animated.View>
-        </View>
+            <View style={styles.divider} />
 
-        <Animated.View entering={FadeInUp.delay(600)} style={styles.footer}>
-          <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.startButton}>
+            <View style={styles.panelSection}>
+              <Text style={styles.sectionTitle}>ADJUST TONE</Text>
+              <View style={styles.tonesGrid}>
+                {tones.map((t) => (
+                  <TouchableOpacity
+                    key={t.id}
+                    onPress={() => setTone(t.id)}
+                    style={[styles.toneBtn, tone === t.id && styles.toneBtnActive]}
+                  >
+                    <Text style={[styles.toneLabel, tone === t.id && styles.toneLabelActive]}>{t.id}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </BlurView>
+        </Animated.View>
+
+        {/* Action Button */}
+        <Animated.View entering={FadeInUp.delay(600).duration(1000)}>
+          <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.mainBtn}>
             <LinearGradient
-              colors={['#fff', '#cbd5e1']}
-              style={styles.startButtonGradient}
+              colors={['#fff', '#e2e8f0']}
+              style={styles.btnGradient}
             >
-              <Text style={styles.startButtonText}>Initiate Session</Text>
-              <ChevronRight size={20} color="#000" />
+              <Text style={styles.btnText}>INITIATE SEQUENCE</Text>
+              <ChevronRight size={22} color="#000" />
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -154,150 +147,175 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 70 : 50,
-    paddingBottom: 50,
+    paddingTop: Platform.OS === 'ios' ? 80 : 60,
+    paddingBottom: 60,
     justifyContent: 'space-between',
   },
   header: {
-    gap: 4,
+    gap: 8,
   },
-  topRow: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  welcomeText: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '900',
-    letterSpacing: 3,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#fff',
-    letterSpacing: -2,
-    marginTop: -4,
-  },
-  languageToggle: {
+  statusBadge: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
-    padding: 3,
-    gap: 2,
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  langButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
   },
-  langButtonActive: {
+  statusText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1.5,
+  },
+  langContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  langItem: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  langItemActive: {
     backgroundColor: '#fff',
+    borderColor: '#fff',
   },
   langText: {
     fontSize: 10,
     fontWeight: '900',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.4)',
   },
   langTextActive: {
     color: '#000',
   },
-  mainContainer: {
-    gap: 32,
+  title: {
+    fontSize: 56,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: -3,
   },
-  section: {
-    gap: 12,
+  panelContainer: {
+    flex: 1,
+    marginVertical: 40,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  panel: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'space-around',
   },
-  sectionLabel: {
-    fontSize: 9,
+  panelSection: {
+    gap: 16,
+  },
+  sectionTitle: {
+    fontSize: 10,
     fontWeight: '900',
     color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 2.5,
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   modesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 12,
   },
-  modeCardWrapper: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  modeCard: {
-    flexDirection: 'row',
+  modeItem: {
     alignItems: 'center',
-    padding: 12,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    gap: 8,
+    width: (width - 120) / 3,
   },
-  modeIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  modeName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.4)',
-  },
-  tonesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  toneCard: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  toneCardActive: {
-    backgroundColor: '#fff',
-    borderColor: '#fff',
-  },
-  toneText: {
+  modeLabel: {
     fontSize: 11,
     fontWeight: '800',
     color: 'rgba(255,255,255,0.4)',
   },
-  toneTextActive: {
+  modeLabelActive: {
+    color: '#fff',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginHorizontal: 20,
+  },
+  tonesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  toneBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  toneBtnActive: {
+    backgroundColor: '#fff',
+    borderColor: '#fff',
+  },
+  toneLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  toneLabelActive: {
     color: '#000',
   },
-  footer: {
-    alignItems: 'center',
-  },
-  startButton: {
-    height: 68,
-    width: '100%',
+  mainBtn: {
+    height: 76,
     borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#fff',
-    shadowRadius: 15,
+    shadowRadius: 20,
     shadowOpacity: 0.1,
   },
-  startButtonGradient: {
+  btnGradient: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
   },
-  startButtonText: {
+  btnText: {
     color: '#000',
     fontSize: 18,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   }
 });

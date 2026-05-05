@@ -9,27 +9,32 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Keyboard
+  Keyboard,
+  Dimensions
 } from 'react-native';
-import Animated, { FadeInRight, FadeInLeft } from 'react-native-reanimated';
+import Animated, { FadeInRight, FadeInLeft, SlideInBottom } from 'react-native-reanimated';
 import { useAppContext } from '../../src/context/AppContext';
 import { GeminiService } from '../../src/services/geminiService';
 import { speechService } from '../../src/services/speechService';
-import { Mic, Send, ArrowLeft, Bot, User, Trash2 } from 'lucide-react-native';
+import { Mic, Send, Bot, User, Trash2, Info } from 'lucide-react-native';
 import { collection, addDoc, serverTimestamp, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../src/config/firebase';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
+const { width } = Dimensions.get('window');
 
 const MessageItem = React.memo(({ item }: { item: any }) => {
   const isUser = item.role === 'user';
   return (
     <Animated.View 
-      entering={isUser ? FadeInRight : FadeInLeft}
+      entering={isUser ? FadeInRight.duration(400) : FadeInLeft.duration(400)}
       style={[styles.messageRow, isUser ? styles.userRow : styles.modelRow]}
     >
       {!isUser && (
-        <View style={styles.avatar}>
-          <Bot size={16} color="#60a5fa" />
-        </View>
+        <LinearGradient colors={['#3b82f6', '#2563eb']} style={styles.avatar}>
+          <Bot size={14} color="#fff" />
+        </LinearGradient>
       )}
       <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.modelBubble]}>
         <Text style={[styles.messageText, isUser ? styles.userText : styles.modelText]}>
@@ -37,9 +42,9 @@ const MessageItem = React.memo(({ item }: { item: any }) => {
         </Text>
       </View>
       {isUser && (
-        <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-          <User size={16} color="#fff" />
-        </View>
+        <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.avatar}>
+          <User size={14} color="#fff" />
+        </LinearGradient>
       )}
     </Animated.View>
   );
@@ -54,28 +59,6 @@ export default function ChatScreen() {
 
   const gemini = useMemo(() => new GeminiService(apiKey), [apiKey]);
 
-  // LOAD CLOUD HISTORY
-  useEffect(() => {
-    if (user) {
-      const loadCloudHistory = async () => {
-        try {
-          const q = query(
-            collection(db, 'conversations'), 
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'asc')
-          );
-          const querySnapshot = await getDocs(q);
-          querySnapshot.forEach((doc) => {
-            // Mapping cloud history to local state if needed
-          });
-        } catch (e) {
-          console.error('Firestore load error', e);
-        }
-      };
-      loadCloudHistory();
-    }
-  }, [user]);
-
   const handleSendMessage = useCallback(async (text: string) => {
     const message = text || inputText;
     if (!message.trim() || isTyping) return;
@@ -86,7 +69,6 @@ export default function ChatScreen() {
     setIsTyping(true);
     Keyboard.dismiss();
 
-    // SAVE TO CLOUD (Firestore)
     if (user) {
       try {
         await addDoc(collection(db, 'conversations'), {
@@ -104,11 +86,8 @@ export default function ChatScreen() {
       const response = await gemini.generateResponse(message, history, mode, tone, language);
       const modelMsg = { role: 'model' as const, text: response };
       addMessage(modelMsg);
-
-      // Speak the response
       speechService.speak(response, language);
 
-      // SAVE RESPONSE TO CLOUD
       if (user) {
         await addDoc(collection(db, 'conversations'), {
           userId: user.uid,
@@ -118,8 +97,7 @@ export default function ChatScreen() {
         });
       }
     } catch (error) {
-      console.error('Chat error:', error);
-      addMessage({ role: 'model', text: 'Sorry, I encountered an error. Please check your connection.' });
+      addMessage({ role: 'model', text: 'Connection lost. Please check your settings.' });
     } finally {
       setIsTyping(false);
     }
@@ -131,33 +109,30 @@ export default function ChatScreen() {
       setIsListening(false);
     } else {
       setIsListening(true);
-      speechService.startListening(
-        language,
-        (text) => {
-          setIsListening(false);
-          handleSendMessage(text);
-        },
-        (err) => {
-          setIsListening(false);
-          console.error('STT Error', err);
-        }
-      );
+      speechService.startListening(language, (text) => {
+        setIsListening(false);
+        handleSendMessage(text);
+      }, () => setIsListening(false));
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      <LinearGradient colors={['#000', '#0f172a']} style={StyleSheet.absoluteFill} />
+      
+      {/* Dynamic Background Pattern (Subtle dots) */}
+      <View style={styles.pattern} />
+
       <View style={styles.header}>
-        <View>
-          <Text style={styles.statusText}>{isTyping ? 'GEMINI IS TYPING...' : 'SYSTEM READY'}</Text>
-          <Text style={styles.modeText}>{mode} • {tone}</Text>
+        <View style={styles.headerInfo}>
+          <View style={styles.statusDot} />
+          <View>
+            <Text style={styles.statusText}>{isTyping ? 'GEMINI IS THINKING...' : 'LIVE SESSION'}</Text>
+            <Text style={styles.modeText}>{mode} • {tone}</Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={clearHistory}>
-          <Trash2 size={20} color="rgba(255,255,255,0.4)" />
+        <TouchableOpacity style={styles.clearBtn} onPress={clearHistory}>
+          <Trash2 size={18} color="rgba(255,255,255,0.4)" />
         </TouchableOpacity>
       </View>
 
@@ -168,37 +143,44 @@ export default function ChatScreen() {
         renderItem={({ item }) => <MessageItem item={item} />}
         contentContainerStyle={styles.listContent}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
+        showsVerticalScrollIndicator={false}
       />
 
-      <View style={styles.inputArea}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Message Gemini..."
-            placeholderTextColor="rgba(255,255,255,0.3)"
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity 
-            style={[styles.actionBtn, isListening && styles.listeningBtn]} 
-            onPress={toggleListening}
-          >
-            <Mic size={20} color={isListening ? '#ef4444' : '#fff'} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionBtn, { backgroundColor: '#fff' }]} 
-            onPress={() => handleSendMessage(inputText)}
-            disabled={!inputText.trim()}
-          >
-            <Send size={20} color="#000" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <BlurView intensity={30} tint="dark" style={styles.inputArea}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Ask anything..."
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+            />
+            <View style={styles.actions}>
+              <TouchableOpacity 
+                style={[styles.actionBtn, isListening && styles.listeningBtn]} 
+                onPress={toggleListening}
+              >
+                <Mic size={20} color={isListening ? '#ef4444' : 'rgba(255,255,255,0.6)'} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.sendBtn} 
+                onPress={() => handleSendMessage(inputText)}
+                disabled={!inputText.trim() && !isListening}
+              >
+                <LinearGradient colors={['#fff', '#e2e8f0']} style={styles.sendBtnGradient}>
+                  <Send size={18} color="#000" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BlurView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -207,34 +189,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  pattern: {
+    position: 'absolute',
+    width: width,
+    height: '100%',
+    opacity: 0.05,
+    backgroundColor: 'transparent',
+    // In a real app we'd use a small SVG pattern here
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  headerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+    shadowColor: '#10b981',
+    shadowRadius: 4,
+    shadowOpacity: 0.5,
   },
   statusText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#4ade80',
-    letterSpacing: 2,
+    color: '#fff',
+    letterSpacing: 1.5,
   },
   modeText: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.4)',
-    marginTop: 2,
+    fontWeight: '500',
+  },
+  clearBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContent: {
     padding: 20,
-    gap: 16,
+    gap: 20,
   },
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 12,
+    gap: 10,
     maxWidth: '85%',
   },
   userRow: {
@@ -244,18 +256,15 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+    width: 28,
+    height: 28,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   messageBubble: {
-    padding: 14,
-    borderRadius: 20,
+    padding: 16,
+    borderRadius: 24,
   },
   userBubble: {
     backgroundColor: '#fff',
@@ -268,8 +277,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '500',
   },
   userText: {
     color: '#000',
@@ -278,25 +288,32 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   inputArea: {
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 30,
+    borderRadius: 28,
     padding: 6,
     paddingLeft: 20,
-    gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   input: {
     flex: 1,
     color: '#fff',
-    fontSize: 15,
-    maxHeight: 100,
+    fontSize: 16,
+    maxHeight: 120,
+    paddingVertical: 10,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   actionBtn: {
     width: 44,
@@ -304,11 +321,19 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   listeningBtn: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: '#ef4444',
-    borderWidth: 1,
+  },
+  sendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  sendBtnGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

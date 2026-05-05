@@ -7,12 +7,18 @@ import {
   StyleSheet, 
   ActivityIndicator, 
   KeyboardAvoidingView, 
-  Platform
+  Platform,
+  Dimensions
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../src/config/firebase';
-import { Sparkles, Mail, Lock, UserPlus, ArrowLeft } from 'lucide-react-native';
+import { UserPlus, Mail, Lock, ArrowLeft, ChevronRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
+const { width } = Dimensions.get('window');
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('');
@@ -43,86 +49,103 @@ export default function SignupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" />
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#1e1b4b', '#312e81', '#0f172a']}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      <Animated.View entering={FadeIn.delay(500).duration(2000)} style={[styles.orb, styles.orb1]} />
 
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the future of AI assistance</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Mail size={20} color="rgba(255,255,255,0.4)" />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="rgba(255,255,255,0.4)" />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="rgba(255,255,255,0.4)" />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-          </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleSignup}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#000" />
-            ) : (
-              <>
-                <Text style={styles.buttonText}>Sign Up</Text>
-                <UserPlus size={20} color="#000" />
-              </>
-            )}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <View style={styles.content}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+          <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
+            <Text style={styles.title}>Join Us</Text>
+            <Text style={styles.subtitle}>Begin your AI journey today.</Text>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(300).duration(1000)} style={styles.formContainer}>
+            <BlurView intensity={20} tint="dark" style={styles.glassCard}>
+              <View style={styles.inputGroup}>
+                <View style={styles.inputContainer}>
+                  <Mail size={18} color="rgba(255,255,255,0.5)" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Lock size={18} color="rgba(255,255,255,0.5)" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Lock size={18} color="rgba(255,255,255,0.5)" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                  />
+                </View>
+              </View>
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+              <TouchableOpacity 
+                style={styles.signupButton} 
+                onPress={handleSignup}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={['#fff', '#e2e8f0']}
+                  style={styles.buttonGradient}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#000" />
+                  ) : (
+                    <>
+                      <Text style={styles.signupButtonText}>Create Account</Text>
+                      <ChevronRight size={20} color="#000" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </BlurView>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(600).duration(1000)} style={styles.footer}>
+            <Text style={styles.footerText}>Already part of the future?</Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
-                <Text style={styles.linkText}>Sign In</Text>
+                <Text style={styles.loginLink}>Sign In</Text>
               </TouchableOpacity>
             </Link>
-          </View>
+          </Animated.View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -131,80 +154,118 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  orb: {
+    position: 'absolute',
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+    opacity: 0.15,
+    top: -width * 0.3,
+    left: -width * 0.2,
+    backgroundColor: '#818cf8',
+  },
+  keyboardView: {
+    flex: 1,
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
-    padding: 32,
+    padding: 24,
     gap: 32,
   },
   backButton: {
     position: 'absolute',
     top: 60,
     left: 24,
-    zIndex: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     gap: 8,
     marginTop: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 36,
+    fontWeight: '800',
     color: '#fff',
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.4)',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '500',
   },
-  form: {
-    gap: 16,
+  formContainer: {
+    borderRadius: 32,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    padding: 24,
+    gap: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  inputGroup: {
+    gap: 12,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    height: 56,
+    height: 64,
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   input: {
     flex: 1,
     color: '#fff',
     fontSize: 16,
+    fontWeight: '500',
   },
-  button: {
-    backgroundColor: '#fff',
-    height: 56,
-    borderRadius: 16,
+  signupButton: {
+    height: 64,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  buttonGradient: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
   },
-  buttonText: {
+  signupButtonText: {
     color: '#000',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
   errorText: {
-    color: '#ef4444',
+    color: '#f87171',
     fontSize: 14,
     textAlign: 'center',
+    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    alignItems: 'center',
+    gap: 8,
   },
   footerText: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 15,
   },
-  linkText: {
+  loginLink: {
     color: '#fff',
+    fontSize: 15,
     fontWeight: '700',
-  },
+  }
 });

@@ -4,7 +4,8 @@ import {
   Text, 
   TouchableOpacity, 
   StyleSheet,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -29,12 +30,12 @@ import BackgroundAnimation from '../../src/components/BackgroundAnimation';
 
 const { width, height } = Dimensions.get('window');
 
-const modes: { id: Mode; icon: any; color: string[]; desc: string }[] = [
-  { id: 'Doctor', icon: ShieldCheck, color: ['#3b82f6', '#1d4ed8'], desc: 'Professional Medical Care' },
-  { id: 'Teacher', icon: GraduationCap, color: ['#f59e0b', '#d97706'], desc: 'Expert Learning Guidance' },
-  { id: 'Fitness Trainer', icon: Dumbbell, color: ['#10b981', '#059669'], desc: 'Elite Physical Coaching' },
-  { id: 'Therapist', icon: Heart, color: ['#ec4899', '#db2777'], desc: 'Deep Emotional Support' },
-  { id: 'Friend', icon: Coffee, color: ['#8b5cf6', '#7c3aed'], desc: 'Casual Daily Companion' },
+const modes: { id: Mode; icon: any; color: string[] }[] = [
+  { id: 'Doctor', icon: ShieldCheck, color: ['#60a5fa', '#3b82f6'] },
+  { id: 'Teacher', icon: GraduationCap, color: ['#fbbf24', '#f59e0b'] },
+  { id: 'Fitness', icon: Dumbbell, color: ['#34d399', '#10b981'] },
+  { id: 'Therapist', icon: Heart, color: ['#f472b6', '#ec4899'] },
+  { id: 'Friend', icon: Coffee, color: ['#a78bfa', '#8b5cf6'] },
 ];
 
 const tones: { id: Tone; icon: any }[] = [
@@ -53,31 +54,20 @@ const languages: { id: Language; name: string }[] = [
 
 export default function HomeScreen() {
   const { mode, setMode, tone, setTone, language, setLanguage } = useAppContext();
-  const [inspiration, setInspiration] = React.useState('');
   const router = useRouter();
-
-  React.useEffect(() => {
-    const fetchInspiration = async () => {
-      try {
-        const response = await fetch('https://api.quotable.io/random?tags=motivational');
-        const data = await response.json();
-        if (data.content) setInspiration(data.content);
-      } catch (e) {
-        setInspiration('Think limitlessly, converse intelligently.');
-      }
-    };
-    fetchInspiration();
-  }, []);
 
   return (
     <View style={styles.container}>
       <BackgroundAnimation />
       
       <View style={styles.content}>
+        {/* Header - Very Compact */}
         <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome to the Future,</Text>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>Aura Pulse</Text>
+          <View style={styles.topRow}>
+            <View>
+              <Text style={styles.welcomeText}>AURA SYSTEM</Text>
+              <Text style={styles.title}>Aether</Text>
+            </View>
             <View style={styles.languageToggle}>
               {languages.map((l) => (
                 <TouchableOpacity
@@ -90,36 +80,31 @@ export default function HomeScreen() {
               ))}
             </View>
           </View>
-          {inspiration ? (
-            <BlurView intensity={20} tint="dark" style={styles.inspirationCard}>
-              <Text style={styles.inspirationText}>"{inspiration}"</Text>
-            </BlurView>
-          ) : null}
         </Animated.View>
 
-        <View style={styles.mainGrid}>
-          {/* Mode Selection */}
+        <View style={styles.mainContainer}>
+          {/* Mode Selection - 2 Column Grid to save space */}
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Sparkles size={14} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.sectionLabel}>CORE FREQUENCY</Text>
+              <Sparkles size={12} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.sectionLabel}>PERSONA FREQUENCY</Text>
             </View>
             <View style={styles.modesGrid}>
               {modes.map((m) => (
                 <TouchableOpacity
                   key={m.id}
-                  onPress={() => setMode(m.id)}
-                  style={styles.modeCardWrapper}
+                  onPress={() => setMode(m.id as any)}
+                  style={[styles.modeCardWrapper, { width: (width - 60) / 2 }]}
                 >
                   <BlurView intensity={mode === m.id ? 60 : 15} tint="dark" style={[
                     styles.modeCard,
-                    mode === m.id && { borderColor: m.color[0], borderWidth: 1.5 }
+                    mode === m.id && { borderColor: m.color[0], borderWidth: 1 }
                   ]}>
                     <LinearGradient
                       colors={mode === m.id ? m.color : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.05)']}
                       style={styles.modeIconBg}
                     >
-                      <m.icon size={20} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.4)'} />
+                      <m.icon size={18} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.4)'} />
                     </LinearGradient>
                     <Text style={[styles.modeName, mode === m.id && { color: '#fff' }]}>{m.id}</Text>
                   </BlurView>
@@ -128,10 +113,10 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* Tone Selection */}
+          {/* Tone Selection - Compact Horizontal or Wrap */}
           <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
              <View style={styles.sectionHeader}>
-              <Zap size={14} color="rgba(255,255,255,0.4)" />
+              <Zap size={12} color="rgba(255,255,255,0.4)" />
               <Text style={styles.sectionLabel}>VIBRATIONAL TONE</Text>
             </View>
             <View style={styles.tonesGrid}>
@@ -148,14 +133,15 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
 
-        <Animated.View entering={FadeInUp.delay(600)}>
+        {/* Action Button - Centered and High Visibility */}
+        <Animated.View entering={FadeInUp.delay(600)} style={styles.footer}>
           <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.startButton}>
             <LinearGradient
-              colors={['#fff', '#e2e8f0']}
+              colors={['#fff', '#cbd5e1']}
               style={styles.startButtonGradient}
             >
-              <Text style={styles.startButtonText}>Initiate Sequence</Text>
-              <ChevronRight size={22} color="#000" />
+              <Text style={styles.startButtonText}>Initiate Session</Text>
+              <ChevronRight size={20} color="#000" />
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -172,36 +158,39 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: Platform.OS === 'ios' ? 70 : 50,
+    paddingBottom: 50,
     justifyContent: 'space-between',
   },
   header: {
-    gap: 8,
+    gap: 4,
   },
-  welcomeText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  titleRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  welcomeText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '900',
+    letterSpacing: 3,
+  },
   title: {
-    fontSize: 42,
+    fontSize: 48,
     fontWeight: '900',
     color: '#fff',
     letterSpacing: -2,
+    marginTop: -4,
   },
   languageToggle: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
     padding: 3,
     gap: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   langButton: {
     paddingHorizontal: 12,
@@ -212,30 +201,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   langText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
   },
   langTextActive: {
     color: '#000',
   },
-  inspirationCard: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  inspirationText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    fontStyle: 'italic',
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  mainGrid: {
-    gap: 24,
+  mainContainer: {
+    gap: 32,
   },
   section: {
     gap: 12,
@@ -246,13 +220,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '900',
     color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 2,
+    letterSpacing: 2.5,
   },
   modesGrid: {
-    gap: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   modeCardWrapper: {
     borderRadius: 20,
@@ -262,21 +238,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    gap: 14,
+    gap: 10,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
   modeIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modeName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.4)',
   },
   tonesGrid: {
     flexDirection: 'row',
@@ -284,9 +260,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   toneCard: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
@@ -296,17 +272,24 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   toneText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: 'rgba(255,255,255,0.4)',
   },
   toneTextActive: {
     color: '#000',
   },
+  footer: {
+    alignItems: 'center',
+  },
   startButton: {
-    height: 72,
+    height: 68,
+    width: '100%',
     borderRadius: 24,
     overflow: 'hidden',
+    shadowColor: '#fff',
+    shadowRadius: 15,
+    shadowOpacity: 0.1,
   },
   startButtonGradient: {
     flex: 1,
@@ -317,7 +300,8 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     color: '#000',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
+    letterSpacing: 0.5,
   }
 });

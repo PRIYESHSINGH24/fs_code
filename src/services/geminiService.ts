@@ -7,9 +7,9 @@ export class GeminiService {
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    // Using gemini-pro as it's the most widely compatible
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
-    this.fallbackModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Using Gemini 2.5 series (Current Standard in 2026)
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    this.fallbackModel = this.genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
   }
 
   async validateKey() {
@@ -45,7 +45,6 @@ export class GeminiService {
     }));
 
     try {
-      // Try primary model
       const chat = this.model.startChat({
         history: chatHistory,
         generationConfig: { maxOutputTokens: 500 },
@@ -58,9 +57,8 @@ export class GeminiService {
       const response = await result.response;
       return response.text();
     } catch (error) {
-      console.warn("Primary model failed, trying fallback...", error);
+      console.warn("Gemini 2.5 Flash failed, trying Pro...", error);
       
-      // Try fallback model
       try {
         const chatFallback = this.fallbackModel.startChat({
           history: chatHistory,
@@ -74,7 +72,7 @@ export class GeminiService {
         const responseFallback = await resultFallback.response;
         return responseFallback.text();
       } catch (fallbackError) {
-        console.error("Gemini Fallback Error:", fallbackError);
+        console.error("Gemini 2.5 Pro Error:", fallbackError);
         throw fallbackError;
       }
     }

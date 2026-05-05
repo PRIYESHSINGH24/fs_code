@@ -11,12 +11,11 @@ import { useRouter } from 'expo-router';
 import Animated, { 
   FadeIn, 
   FadeInDown, 
+  FadeOut,
   useAnimatedStyle, 
   useSharedValue, 
   withRepeat, 
   withTiming, 
-  withDelay,
-  interpolateColor,
   Easing
 } from 'react-native-reanimated';
 import { useAppContext, Mode, Tone, Language } from '../../src/context/AppContext';
@@ -39,12 +38,12 @@ import BackgroundAnimation from '../../src/components/BackgroundAnimation';
 
 const { width, height } = Dimensions.get('window');
 
-const modes: { id: Mode; icon: any; color: string[] }[] = [
-  { id: 'Doctor', icon: ShieldCheck, color: ['#3b82f6', '#1d4ed8'] },
-  { id: 'Teacher', icon: GraduationCap, color: ['#f59e0b', '#d97706'] },
-  { id: 'Fitness', icon: Dumbbell, color: ['#10b981', '#059669'] },
-  { id: 'Therapist', icon: Heart, color: ['#ec4899', '#db2777'] },
-  { id: 'Friend', icon: Coffee, color: ['#8b5cf6', '#7c3aed'] },
+const modes: { id: Mode; icon: any; color: string[]; desc: string }[] = [
+  { id: 'Doctor', icon: ShieldCheck, color: ['#3b82f6', '#1d4ed8'], desc: 'Professional medical diagnosis and health advice.' },
+  { id: 'Teacher', icon: GraduationCap, color: ['#f59e0b', '#d97706'], desc: 'Expert academic guidance and simplified learning.' },
+  { id: 'Fitness', icon: Dumbbell, color: ['#10b981', '#059669'], desc: 'Personalized workout coaching and health goals.' },
+  { id: 'Therapist', icon: Heart, color: ['#ec4899', '#db2777'], desc: 'Empathetic listening and emotional support.' },
+  { id: 'Friend', icon: Coffee, color: ['#8b5cf6', '#7c3aed'], desc: 'Casual, friendly chat and daily companionship.' },
 ];
 
 const tones: { id: Tone; icon: any }[] = [
@@ -68,7 +67,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     pulse.value = withRepeat(
-      withTiming(1.15, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1.15, { duration: 2500, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
@@ -79,7 +78,8 @@ export default function HomeScreen() {
     opacity: 0.6,
   }));
 
-  const activeColor = modes.find(m => m.id === mode)?.color[0] || '#fff';
+  const activeMode = modes.find(m => m.id === mode) || modes[0];
+  const activeColor = activeMode.color[0];
 
   return (
     <View style={styles.container}>
@@ -89,12 +89,23 @@ export default function HomeScreen() {
       <View style={styles.auraContainer}>
         <Animated.View style={[styles.auraRing, { borderColor: activeColor }, animatedAura]} />
         <View style={[styles.auraCore, { shadowColor: activeColor }]} />
+        
+        {/* Holographic Meaning Display */}
+        <Animated.View 
+          key={mode}
+          entering={FadeInDown.duration(600)}
+          exiting={FadeOut.duration(300)}
+          style={styles.meaningWrapper}
+        >
+          <Text style={[styles.meaningTitle, { color: activeColor }]}>{mode.toUpperCase()}</Text>
+          <Text style={styles.meaningText}>{activeMode.desc}</Text>
+        </Animated.View>
       </View>
 
       <View style={styles.content}>
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
-          <Text style={styles.headerTag}>SYSTEM READY</Text>
+          <Text style={styles.headerTag}>SYSTEM FREQUENCY</Text>
           <Text style={styles.title}>AURA AI</Text>
           <View style={styles.langSwitch}>
             {languages.map((l) => (
@@ -109,7 +120,7 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Dynamic Frequency Selectors */}
+        {/* Dynamic Selectors */}
         <View style={styles.selectorContainer}>
           <View style={styles.modesRow}>
             {modes.map((m, index) => (
@@ -122,7 +133,6 @@ export default function HomeScreen() {
                   style={[styles.modeBtn, mode === m.id && { backgroundColor: m.color[0], borderColor: m.color[0] }]}
                 >
                   <m.icon size={22} color={mode === m.id ? '#fff' : 'rgba(255,255,255,0.4)'} />
-                  {mode === m.id && <Text style={styles.modeActiveLabel}>{m.id}</Text>}
                 </TouchableOpacity>
               </Animated.View>
             ))}
@@ -146,7 +156,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* The Action */}
         <Animated.View entering={FadeIn.delay(800)}>
           <TouchableOpacity onPress={() => router.push('/(main)/chat')} style={styles.startAction}>
             <LinearGradient
@@ -170,47 +179,65 @@ const styles = StyleSheet.create({
   },
   auraContainer: {
     position: 'absolute',
-    top: height * 0.25,
+    top: height * 0.22,
     left: 0,
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
   auraRing: {
-    width: width * 1.4,
-    height: width * 1.4,
-    borderRadius: width * 0.7,
-    borderWidth: 2,
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
   },
   auraCore: {
     position: 'absolute',
-    width: width * 0.6,
-    height: width * 0.6,
-    borderRadius: width * 0.3,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    width: width * 0.5,
+    height: width * 0.5,
+    borderRadius: width * 0.25,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     shadowRadius: 100,
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.5,
+  },
+  meaningWrapper: {
+    position: 'absolute',
+    alignItems: 'center',
+    width: width * 0.7,
+    gap: 8,
+  },
+  meaningTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 4,
+  },
+  meaningText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 20,
   },
   content: {
     flex: 1,
     paddingHorizontal: 30,
-    paddingTop: Platform.OS === 'ios' ? 80 : 60,
-    paddingBottom: 60,
+    paddingTop: Platform.OS === 'ios' ? 70 : 50,
+    paddingBottom: 50,
     justifyContent: 'space-between',
   },
   header: {
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
   headerTag: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '900',
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 4,
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 3,
   },
   title: {
-    fontSize: 64,
+    fontSize: 54,
     fontWeight: '900',
     color: '#fff',
     letterSpacing: -4,
@@ -219,29 +246,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 20,
-    padding: 4,
-    marginTop: 10,
+    padding: 3,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   langBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: 16,
   },
   langBtnActive: {
     backgroundColor: '#fff',
   },
   langText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.2)',
   },
   langTextActive: {
     color: '#000',
   },
   selectorContainer: {
-    gap: 40,
+    gap: 30,
   },
   modesRow: {
     flexDirection: 'row',
@@ -250,30 +276,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modeBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    overflow: 'hidden',
-  },
-  modeActiveLabel: {
-    position: 'absolute',
-    bottom: -20,
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#fff',
   },
   tonesContainer: {
-    gap: 20,
+    gap: 16,
   },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '900',
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.2)',
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -281,30 +299,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
   },
   toneTag: {
-    borderRadius: 14,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   toneBlur: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   toneText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.3)',
   },
   startAction: {
-    height: 80,
-    borderRadius: 30,
+    height: 76,
+    borderRadius: 28,
     overflow: 'hidden',
     shadowColor: '#fff',
-    shadowRadius: 30,
-    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    shadowOpacity: 0.1,
   },
   startGradient: {
     flex: 1,
@@ -317,6 +335,6 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 18,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   }
 });

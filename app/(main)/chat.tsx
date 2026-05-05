@@ -101,7 +101,7 @@ export default function ChatScreen() {
     }
 
     try {
-      const response = await gemini.generateResponse(message, history, mode, tone);
+      const response = await gemini.generateResponse(message, history, mode, tone, language);
       const modelMsg = { role: 'model' as const, text: response };
       addMessage(modelMsg);
 

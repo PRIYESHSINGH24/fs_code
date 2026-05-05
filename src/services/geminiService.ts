@@ -1,48 +1,56 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export class GeminiService {
-  private ai: GoogleGenAI;
-  private model: string = "gemini-3-flash-preview";
+  private genAI: GoogleGenerativeAI;
+  private model: any;
 
   constructor(apiKey: string) {
-    this.ai = new GoogleGenAI({ apiKey });
-  }
-
-  async generateResponse(
-    prompt: string,
-    history: { role: "user" | "model"; parts: { text: string }[] }[],
-    systemInstruction: string
-  ) {
-    try {
-      const chat = this.ai.chats.create({
-        model: this.model,
-        config: {
-          systemInstruction,
-        },
-        history,
-      });
-
-      const result = await chat.sendMessage({
-        message: prompt,
-      });
-
-      return result.text;
-    } catch (error) {
-      console.error("Gemini API Error:", error);
-      throw error;
-    }
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   }
 
   async validateKey() {
     try {
-      // Just a simple check call
-      const response = await this.ai.models.generateContent({
-        model: this.model,
-        contents: "Hi",
-      });
-      return !!response.text;
-    } catch (error) {
+      const result = await this.model.generateContent("test");
+      return !!result.response.text();
+    } catch (e) {
       return false;
+    }
+  }
+
+  async testConnection() {
+    return this.validateKey();
+  }
+
+  async generateResponse(prompt: string, history: any[], mode: string, tone: string, language: string = 'en-US') {
+    const languageInstruction = language === 'hi-IN' ? "You MUST respond ONLY in Hindi (Hindustani) script." : "Respond in English.";
+    
+    const systemPrompt = `You are a professional ${mode}. 
+    Your personality is ${tone}. 
+    ${languageInstruction}
+    Keep your responses concise, friendly, and helpful. 
+    Do not use complex formatting like markdown headers. Use plain text suitable for speech.`;
+
+    const chat = this.model.startChat({
+      history: history.map((m: any) => ({
+        role: m.role,
+        parts: [{ text: m.text }]
+      })),
+      generationConfig: {
+        maxOutputTokens: 500,
+      },
+    });
+
+    try {
+      const result = await chat.sendMessage([
+        { text: systemPrompt },
+        { text: prompt }
+      ]);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      throw error;
     }
   }
 }
